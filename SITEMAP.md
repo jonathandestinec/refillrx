@@ -11,6 +11,7 @@ Pharmacy: **Mani, Benin City**
 ├── /login
 ├── /register
 ├── /forgot-password
+├── /offline
 │
 ├── /patient
 │   ├── /dashboard
@@ -19,6 +20,8 @@ Pharmacy: **Mani, Benin City**
 │   │   └── /[planId]
 │   ├── /orders
 │   │   └── /[orderId]
+│   ├── /messages
+│   │   └── /[conversationId]
 │   ├── /history
 │   └── /settings
 │
@@ -26,6 +29,8 @@ Pharmacy: **Mani, Benin City**
     ├── /queue
     ├── /orders
     │   └── /[orderId]
+    ├── /messages
+    │   └── /[conversationId]
     ├── /patients
     │   └── /[patientId]
     └── /settings
@@ -35,13 +40,22 @@ Pharmacy: **Mani, Benin City**
 
 ### `/`
 
-**Purpose:** Explain RefillRx and introduce Mani, Benin City.
+**Purpose:** Explain RefillRx and introduce Mani, Benin City through an editorial, illustration-led landing page.
+
+**Landing page sections:**
+
+1. Black split hero with the main promise, primary CTA, and a large supplied doodle.
+2. Interactive card-deck use-case section using the five supplied doodles.
+3. Patient dashboard preview with next refill, reminder, status, and chat.
+4. Mani, Benin City trust and pharmacist workflow information.
+5. Service fee explanation and testable signup CTA.
+6. FAQ and final signup CTA.
 
 **Primary actions:**
 
 - Create an account
 - Sign in
-- Learn how the refill service works
+- Explore patient and pharmacist use cases
 
 **Content:**
 
@@ -50,6 +64,14 @@ Pharmacy: **Mani, Benin City**
 - Mani pharmacy location and service information
 - Monthly service fee explanation
 - Privacy note: medication prices are confirmed privately by the pharmacist
+
+**Interaction:**
+
+- Hero CTA moves visitors to registration.
+- Scroll cue moves visitors to the interactive use cases.
+- The use-case cards flip on click or keyboard activation.
+- The selected card becomes the visual focus while sibling cards tilt/spread slightly.
+- The patient preview demonstrates the dashboard and pharmacist chat experience.
 
 ### `/about`
 
@@ -154,6 +176,28 @@ Requested
 
 The patient sees the confirmed medicine amount only after the pharmacist confirms the order. Before that, the interface shows that pricing is pending pharmacist confirmation.
 
+### `/patient/messages`
+
+Lists the patient’s conversations, grouped by refill order.
+
+**Shows:**
+
+- Pharmacy name: Mani, Benin City
+- Last message preview
+- Unread count
+- Order status shortcut
+
+### `/patient/messages/[conversationId]`
+
+One-to-one chat between the patient and the pharmacist assigned to the order.
+
+**Rules:**
+
+- The conversation is attached to an order.
+- Patients can ask about availability, pickup, or clarification.
+- The chat is not a general medical advice channel.
+- The patient can see the pharmacist’s name and role.
+
 ### `/patient/history`
 
 Lists previous refill orders with:
@@ -209,6 +253,14 @@ Review and update one refill order.
 - Mark collected
 - Cancel or request clarification
 
+### `/pharmacist/messages`
+
+Lists patient conversations attached to active refill orders, with unread messages and queue status.
+
+### `/pharmacist/messages/[conversationId]`
+
+Allows the assigned pharmacist to reply to the patient, provide pickup clarification, and update the order when appropriate.
+
 ### `/pharmacist/patients/[patientId]`
 
 Shows a patient’s refill history and active plans. This is restricted to the pharmacist role.
@@ -222,14 +274,27 @@ Manages:
 - Opening hours
 - Pharmacist account details
 
+## PWA and offline behavior
+
+The PWA is a product capability rather than a standalone user-facing section.
+
+- `/manifest.webmanifest` — App name, Mani/ReFillRx branding, icons, colors, and install metadata.
+- `/offline` — Friendly fallback shown when a requested page is unavailable offline.
+- Service worker — Caches the public shell and safe read-only UI assets.
+- Push notifications — Used for refill reminders, order status changes, and new chat messages after permission is granted.
+- Sensitive order, payment, and chat data must not be treated as permanently available offline.
+
 ## Shared navigation
 
 ### Public navigation
 
 - RefillRx logo
-- How it works
+- Use cases
+- Patient view
+- For Mani
 - About Mani
 - Service fee
+- FAQ
 - Sign in
 - Create account
 
@@ -238,6 +303,7 @@ Manages:
 - Dashboard
 - My refill plans
 - Orders
+- Messages
 - History
 - Settings
 - Sign out
@@ -246,6 +312,7 @@ Manages:
 
 - Queue
 - Orders
+- Messages
 - Patients
 - Settings
 - Sign out
@@ -304,14 +371,26 @@ Login
   → Mark collected
 ```
 
+### Chat flow
+
+```text
+Patient order details
+  → Message pharmacist
+  → Conversation
+  → New message notification
+  → Pharmacist conversation
+  → Reply or update order
+```
+
 ## First implementation slice
 
 The first screens to build are:
 
-1. `/` — Public landing page
+1. `/` — Public landing page with hero, doodles, and interactive card deck
 2. `/login` — Shared login screen
 3. `/patient/dashboard` — Patient dashboard shell
 4. `/patient/plans/new` — Refill plan form
 5. `/pharmacist/queue` — Pharmacist queue shell
+6. `/patient/messages/[conversationId]` — Order-linked chat shell
 
-These five screens establish the primary product story before we connect the database, payments, authentication, and reminder automation.
+These screens establish the primary product story before we connect the database, payments, authentication, PWA notifications, and reminder automation.

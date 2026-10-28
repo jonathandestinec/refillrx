@@ -12,6 +12,8 @@
 
 **Product promise:** RefillRx helps patients keep a simple refill plan, receive a reminder three days before the due date, and know when their order is ready for pickup at Mani.
 
+**Experience direction:** A bold, editorial healthcare landing page with a black-and-illustration hero, colorful vector doodles, playful motion, and a calm mobile-first patient experience.
+
 ## 2. Users and roles
 
 ### Patient
@@ -22,6 +24,7 @@
 - Requests the next refill.
 - Tracks pharmacist confirmation and pickup readiness.
 - Reviews previous refill orders.
+- Chats securely with the pharmacist about an active refill order.
 
 ### Pharmacist
 
@@ -31,6 +34,7 @@
 - Marks an order as ready for pickup.
 - Marks an order as collected.
 - Reviews patient and order history.
+- Chats securely with patients about an active refill order.
 
 ## 3. Product rules
 
@@ -53,9 +57,12 @@
 - Refill request creation.
 - Pharmacist refill queue.
 - Order status updates.
+- Patient–pharmacist order chat.
 - Patient refill history.
 - Monthly service fee in Paystack or Flutterwave test mode.
 - Automated reminder three days before the next refill date.
+- Progressive Web App installation and offline fallback.
+- Push notification permission and notification preferences.
 - Responsive mobile-first interface.
 - Deployment to Vercel.
 
@@ -68,6 +75,7 @@
 - Public medicine marketplace or public price comparison.
 - Real patient medical records.
 - Production payment collection.
+- Group chat or open social messaging.
 
 ## 5. Main user flow
 
@@ -100,6 +108,8 @@
 - `/patient/plans/new` — Register a refill plan
 - `/patient/plans/[id]` — Plan details and request refill
 - `/patient/orders/[id]` — Order status and pickup information
+- `/patient/messages` — Patient conversations
+- `/patient/messages/[conversationId]` — Patient/pharmacist conversation
 - `/patient/history` — Previous orders
 - `/patient/settings` — Profile and notification preferences
 
@@ -107,6 +117,8 @@
 
 - `/pharmacist/queue` — Pending and active refill requests
 - `/pharmacist/orders/[id]` — Review and update an order
+- `/pharmacist/messages` — Pharmacist conversations
+- `/pharmacist/messages/[conversationId]` — Patient conversation
 - `/pharmacist/patients/[id]` — Patient refill history
 - `/pharmacist/settings` — Pharmacy and account settings
 
@@ -184,6 +196,10 @@ The supplied NGN prices will be treated as internal sample prices. They must not
 
 ## 9. Visual direction
 
+- Hero inspired by the first reference: a rounded black editorial panel with a strong serif headline, compact navigation, high-contrast copy, and a large illustration area.
+- An interactive use-case section inspired by the third reference: a centered card deck where the selected card flips to reveal a RefillRx use case or product demo while sibling cards tilt and spread diagonally.
+- A useful patient-product section showing the next refill, reminder state, pickup status, and order-linked chat.
+- The remaining landing page follows the fourth reference: spacious typography, light backgrounds, rounded content cards, restrained navigation, and bright accent blocks.
 - Trustworthy, calm healthcare interface.
 - Mobile-first because many users will access the service from a phone.
 - Warm off-white backgrounds with pharmacy green as the primary accent.
@@ -199,6 +215,11 @@ The supplied NGN prices will be treated as internal sample prices. They must not
 - Replace the default Next.js starter screen.
 - Establish the visual system and navigation.
 - Build the public landing page and responsive shell.
+- Add the black editorial hero.
+- Add the interactive card-deck use-case section.
+- Add the patient dashboard and chat preview section.
+- Add the FAQ section.
+- Use all five supplied SVG doodles.
 
 ### Phase 2 — Patient experience
 
@@ -212,6 +233,14 @@ The supplied NGN prices will be treated as internal sample prices. They must not
 - Add protected pharmacist routes.
 - Build the queue and order detail views.
 - Add status transitions and private price confirmation.
+- Add the patient–pharmacist conversation entry point.
+
+### Phase 3.5 — Conversation and notifications
+
+- Add one-to-one order conversations.
+- Show unread message state in patient and pharmacist navigation.
+- Add push notification preferences.
+- Add PWA manifest, install metadata, and offline fallback.
 
 ### Phase 4 — Data, payment, and automation
 
@@ -224,6 +253,8 @@ The supplied NGN prices will be treated as internal sample prices. They must not
 
 - Test unauthorized access to patient and pharmacist routes.
 - Test the complete demo flow on mobile and desktop.
+- Test chat access so only the patient, assigned pharmacist, and their order can see a conversation.
+- Test installability and the offline fallback for the PWA.
 - Add real local pharmacy content.
 - Deploy to Vercel.
 - Prepare the five-minute presentation.
