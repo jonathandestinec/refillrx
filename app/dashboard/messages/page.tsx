@@ -33,11 +33,13 @@ export default async function PatientMessagesPage() {
     ? await supabase.from("refill_order_messages").select("id, sender_id, body, created_at").eq("order_id", order.id).order("created_at", { ascending: true })
     : { data: [] };
 
+  const unreadMessages = (messages ?? []).filter((message) => message.sender_id !== patientId).length;
+
   return (
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" />
+        <AccountNavigation role="patient" unreadMessages={unreadMessages} />
         <section className="account-content messages-page" id="account-main" tabIndex={-1}>
           <div className="account-intro">
             <p className="eyebrow">Patient messages</p>

@@ -50,7 +50,7 @@ export default function Home() {
               <span className="hero-note__avatar" aria-hidden="true">M</span>
               <span>
                 <strong>Mani, Benin City</strong>
-                <small>Pharmacist-confirmed pickup</small>
+                <small>Open daily, 7am–6pm · Pickup at the pharmacy</small>
               </span>
             </div>
           </div>
@@ -193,6 +193,16 @@ export default function Home() {
               clearly, so patients do not have to guess whether their medicine has arrived.
             </p>
             <p className="outcome-note">Ready for pickup · Mani, Benin City</p>
+            <div className="patient-feature-list">
+              <div className="patient-feature">
+                <span className="patient-feature__icon">01</span>
+                <span><strong>Collect at the counter</strong><small>Mani hands over the order in person, open daily 7am–6pm.</small></span>
+              </div>
+              <div className="patient-feature">
+                <span className="patient-feature__icon">02</span>
+                <span><strong>No delivery, on purpose</strong><small>Medicines are never mailed out, so the pharmacist can check each handover for safety.</small></span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -233,6 +243,11 @@ export default function Home() {
               <div><strong>Private confirmation</strong><span>Keep availability and pricing out of public view.</span></div>
               <div><strong>Conversation in context</strong><span>Answer the patient beside the active order.</span></div>
             </div>
+            <p className="trust-contact">
+              Questions about a refill? Call or WhatsApp Mani on{" "}
+              <a href="tel:+2349061426386">+234 906 142 6386</a>, or visit the counter — open daily, 7am–6pm.
+            </p>
+            <p className="outcome-note">Mani, Benin City · +234 906 142 6386 · 7am–6pm daily</p>
           </div>
         </section>
 
@@ -256,6 +271,14 @@ export default function Home() {
             <details>
               <summary>Can prescription medicines be reviewed?</summary>
               <p>Yes. Prescription-required medicines are flagged for pharmacist review before an order is confirmed.</p>
+            </details>
+            <details>
+              <summary>Do refills get delivered?</summary>
+              <p>No. Every refill is collected in person at Mani's counter in Benin City. Handing over medicines in person lets the pharmacist answer questions and confirm the right medicine goes to the right patient.</p>
+            </details>
+            <details>
+              <summary>When is the pharmacy open?</summary>
+              <p>Mani opens every day from 7am to 6pm. Call or WhatsApp the counter on +234 906 142 6386 if you are running late for a pickup.</p>
             </details>
           </div>
         </section>

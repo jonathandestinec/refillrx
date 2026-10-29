@@ -36,7 +36,7 @@ function getPaystackSecret() {
 }
 
 export async function verifyAndActivatePayment(
-  patientId: string,
+  patientId: string | null,
   reference: string,
 ): Promise<PaymentVerificationResult> {
   const admin = createAdminClient();
@@ -46,7 +46,11 @@ export async function verifyAndActivatePayment(
     .eq("provider_reference", reference)
     .maybeSingle<PaymentRow>();
 
-  if (!payment || payment.patient_id !== patientId) {
+  // The browser verify flow passes the signed-in patient so we can prove the
+  // reference belongs to them. The Paystack webhook supplies the reference
+  // alone (Paystack already authenticated the event), so ownership is
+  // re-proved later by the payment's stored patient link.
+  if (!payment || (patientId !== null && payment.patient_id !== patientId)) {
     return { ok: false, status: "missing", message: "We could not find that payment." };
   }
 
@@ -105,7 +109,7 @@ export async function verifyAndActivatePayment(
     .from("refill_plan_drafts")
     .select("id, patient_id, medicine_id, instructions, frequency_days, next_refill_date")
     .eq("id", draftId)
-    .eq("patient_id", patientId)
+    .eq("patient_id", payment.patient_id)
     .maybeSingle();
 
   if (!draft) return { ok: false, status: "failed", message: "The saved refill details could not be found." };
@@ -155,7 +159,7 @@ export async function verifyAndActivatePayment(
       .from("refill_plans")
       .update({ status: "active", updated_at: new Date().toISOString() })
       .eq("id", planId)
-      .eq("patient_id", patientId);
+      .eq("patient_id", payment.patient_id);
 
     if (activationError) {
       return { ok: false, status: "failed", message: "Payment was confirmed, but the refill plan could not be activated yet." };
@@ -175,7 +179,7 @@ export async function verifyAndActivatePayment(
   }).eq("id", payment.id);
 
   const reminderError = await scheduleRefillReminder(admin, {
-    patientId,
+    patientId: payment.patient_id,
     planId,
     nextRefillDate: draft.next_refill_date,
   });
@@ -184,4 +188,16 @@ export async function verifyAndActivatePayment(
   }
 
   return { ok: true, planId, status: "succeeded" };
+}
+
+// Marks a pending payment failed, e.g. on a Paystack charge.failed webhook
+// event. Only pending rows are touched so a succeeded payment is never undone.
+export async function markPaymentFailed(reference: string) {
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("payments")
+    .update({ status: "failed" })
+    .eq("provider_reference", reference)
+    .eq("status", "pending");
+  if (error) throw error;
 }

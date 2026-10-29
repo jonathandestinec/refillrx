@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/server";
 import PaymentCheckout from "./payment-checkout";
 import RequestRefill from "./request-refill";
 
+const openStatuses = ["requested", "reviewing", "ready"];
+
 export const instant = false;
 
 export default async function DashboardPage() {
@@ -98,6 +100,14 @@ export default async function DashboardPage() {
     : { data: [] };
   const historyMedicineById = new Map((historyMedicines ?? []).map((medicine) => [medicine.id, medicine]));
   const safeHistoryOrders = historyOrders ?? [];
+
+  // Unread chat messages belong to the patient's open refill conversations.
+  const { data: openOrderIds } = await supabase.from("refill_orders").select("id").eq("patient_id", claims.sub).in("status", openStatuses);
+  const unreadRows = openOrderIds?.length
+    ? await supabase.from("refill_order_messages").select("id").in("order_id", openOrderIds.map(order => order.id)).neq("sender_id", claims.sub).is("read_at", null)
+    : { data: [] as { id: string }[] };
+  const unreadMessages = unreadRows?.data?.length ?? 0;
+
   const paymentConfigured = Boolean(
     process.env.PAYSTACK_SECRET_KEY &&
     (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
@@ -107,7 +117,7 @@ export default async function DashboardPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" />
+        <AccountNavigation role="patient" unreadMessages={unreadMessages} />
         <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
         <div className="account-intro">
           <p className="eyebrow">Refill plan</p>

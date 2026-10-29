@@ -12,8 +12,7 @@ export default async function PharmacyMessagesPage() {
   await connection();
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-  const pharmacistId = claimsData?.claims?.sub;
-  if (!pharmacistId) redirect("/login");
+  const pharmacistId = claimsData?.claims?.sub;  if (!pharmacistId) redirect("/login");
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", pharmacistId).maybeSingle();
   if (profile?.role !== "pharmacist") redirect("/dashboard/messages");
@@ -30,22 +29,29 @@ export default async function PharmacyMessagesPage() {
   const [{ data: patients }, { data: medicines }, { data: messages }] = await Promise.all([
     patientIds.length ? supabase.from("profiles").select("id, full_name").in("id", patientIds) : Promise.resolve({ data: [] }),
     medicineIds.length ? supabase.from("medicines").select("id, name, brand, strength").in("id", medicineIds) : Promise.resolve({ data: [] }),
-    orderIds.length ? supabase.from("refill_order_messages").select("id, order_id, sender_id, body, created_at").in("order_id", orderIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [] }),
+    orderIds.length ? supabase.from("refill_order_messages").select("id, order_id, sender_id, body, created_at, read_at").in("order_id", orderIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [] }),
   ]);
   const patientById = new Map((patients ?? []).map((patient) => [patient.id, patient]));
   const medicineById = new Map((medicines ?? []).map((medicine) => [medicine.id, medicine]));
-  const messagesByOrder = new Map<string, Array<{ id: string; sender_id: string; body: string; created_at: string }>>();
+  const messagesByOrder = new Map<string, Array<{ id: string; sender_id: string; body: string; created_at: string; read_at: string | null }>>();
   for (const message of messages ?? []) {
     const current = messagesByOrder.get(message.order_id) ?? [];
     current.push(message);
     messagesByOrder.set(message.order_id, current);
+  }
+  const unreadByOrder = new Map<string, number>();
+  let unreadMessages = 0;
+  for (const [orderId, list] of messagesByOrder) {
+    const unread = list.filter((message) => message.sender_id !== pharmacistId).length;
+    unreadByOrder.set(orderId, unread);
+    unreadMessages += unread;
   }
 
   return (
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="pharmacist" />
+        <AccountNavigation role="pharmacist" unreadMessages={unreadMessages} />
         <section className="account-content messages-page" id="account-main" tabIndex={-1}>
           <div className="account-intro">
             <p className="eyebrow">Pharmacy messages</p>
@@ -65,6 +71,11 @@ export default async function PharmacyMessagesPage() {
                       <span>{medicine?.brand ?? "Medicine details"} · Requested {formatDate(order.requested_at)}</span>
                     </div>
                     <span className="status-pill status-pill--yellow">{order.status === "ready" ? "Ready for pickup" : order.status === "reviewing" ? "Under review" : "Request sent"}</span>
+                    {(unreadByOrder.get(order.id) ?? 0) > 0 && (
+                      <span className="messages-page__unread" aria-label={`${unreadByOrder.get(order.id)} unread`}>
+                        {unreadByOrder.get(order.id)} new
+                      </span>
+                    )}
                   </div>
                   <OrderChat orderId={order.id} viewerId={pharmacistId} participantLabel="Patient" messages={messagesByOrder.get(order.id) ?? []} />
                 </article>

@@ -12,11 +12,17 @@ type OrderControlsProps = {
   availabilityConfirmed: boolean;
   privatePriceAmount: number | null;
   reviewedAt: string | null;
+  referencePrice: number | null;
 };
 
-export default function OrderControls({ orderId, status, availabilityConfirmed, privatePriceAmount, reviewedAt }: OrderControlsProps) {
+export default function OrderControls({ orderId, status, availabilityConfirmed, privatePriceAmount, reviewedAt, referencePrice }: OrderControlsProps) {
   const [statusState, statusAction, statusPending] = useActionState(updateRefillOrderStatus, null as OrderStatusState);
+  const [reviewState, reviewAction, reviewPending] = useActionState(reviewRefillOrder, null as OrderStatusState);
   const [liveOrder, setLiveOrder] = useState({ status, availabilityConfirmed, privatePriceAmount, reviewedAt });
+  const [availability, setAvailability] = useState(() => {
+    if (reviewedAt) return availabilityConfirmed ? "confirmed" : "unavailable";
+    return "";
+  });
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
   useEffect(() => {
@@ -58,7 +64,7 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         <span className={`status-pill ${liveOrder.status === "ready" ? "status-pill--lime" : "status-pill--yellow"}`}>{statusLabel}</span>
         <small className={`pharmacy-order-status__live pharmacy-order-status__live--${liveState}`}>{liveState === "connected" ? "Live" : liveState === "error" ? "Refresh needed" : "Connecting…"}</small>
       </div>
-      <form className="pharmacy-review" action={reviewRefillOrder}>
+      <form className="pharmacy-review" action={reviewAction}>
         <div className="pharmacy-review__heading">
           <p className="eyebrow">Pharmacist review</p>
           <p>Confirm availability and the private medicine price before marking this request ready.</p>
@@ -66,17 +72,36 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         <input type="hidden" name="order_id" value={orderId} />
         <label className="auth-field" htmlFor={`availability-${orderId}`}>
           <span>Availability</span>
-          <select id={`availability-${orderId}`} name="availability" defaultValue={liveOrder.reviewedAt ? (liveOrder.availabilityConfirmed ? "confirmed" : "unavailable") : ""} required>
+          <select
+            id={`availability-${orderId}`}
+            name="availability"
+            value={availability}
+            onChange={(event) => setAvailability(event.target.value)}
+            required
+          >
             <option value="" disabled>Choose a result</option>
             <option value="confirmed">Available</option>
             <option value="unavailable">Unavailable</option>
           </select>
         </label>
         <label className="auth-field" htmlFor={`price-${orderId}`}>
-          <span>Private medicine price (NGN)</span>
-          <input id={`price-${orderId}`} name="private_price_amount" type="number" min="0" step="1" defaultValue={liveOrder.privatePriceAmount ?? ""} placeholder="Enter confirmed price" required={liveOrder.availabilityConfirmed} />
+          <span>Private medicine price (NGN){referencePrice ? ` · reference ₦${referencePrice.toLocaleString()}` : ""}</span>
+          <input
+            id={`price-${orderId}`}
+            name="private_price_amount"
+            type="number"
+            min="0"
+            step="1"
+            defaultValue={liveOrder.privatePriceAmount ?? referencePrice ?? ""}
+            placeholder="Enter confirmed price"
+            disabled={availability !== "confirmed"}
+            required
+          />
         </label>
-        <button className="button button--light" type="submit">Save private review</button>
+        <button className="button button--light" type="submit" disabled={reviewPending}>
+          {reviewPending ? "Saving review…" : "Save private review"}
+        </button>
+        {reviewState?.message && <p className={reviewState.success ? "order-chat__feedback" : "auth-error"} role="status">{reviewState.message}</p>}
       </form>
       <form className="pharmacy-queue__actions" action={statusAction}>
         <input type="hidden" name="order_id" value={orderId} />

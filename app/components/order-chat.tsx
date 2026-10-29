@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useEffect, useState } from "react";
 
-import { sendOrderMessage, type MessageState } from "@/app/actions/refill-orders";
+import { markOrderMessagesRead, sendOrderMessage, type MessageState } from "@/app/actions/refill-orders";
 import { formatDateTime } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,6 +13,14 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
   const [state, action, pending] = useActionState(sendOrderMessage, null as MessageState);
   const [liveMessages, setLiveMessages] = useState(messages);
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
+
+  // Opening the conversation (and any message that arrives while it is open)
+  // marks the other party's messages as read.
+  useEffect(() => {
+    const formData = new FormData();
+    formData.set("order_id", orderId);
+    void markOrderMessagesRead(formData);
+  }, [orderId, liveMessages, state]);
 
   useEffect(() => {
     const supabase = createClient();

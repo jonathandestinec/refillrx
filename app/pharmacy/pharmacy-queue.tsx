@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/date-format";
 import OrderControls from "./order-controls";
 
 type Patient = { id: string; full_name: string | null };
-type Medicine = { id: string; name: string; brand: string | null; strength: string | null; dosage_form: string | null };
+type Medicine = { id: string; name: string; brand: string | null; strength: string | null; dosage_form: string | null; reference_price_ngn: number | null };
 type PharmacyOrder = {
   id: string;
   patient_id: string;
@@ -44,7 +44,7 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
 
       const [{ data: patient }, { data: medicine }] = await Promise.all([
         supabase.from("profiles").select("id, full_name").eq("id", order.patient_id).maybeSingle(),
-        supabase.from("medicines").select("id, name, brand, strength, dosage_form").eq("id", order.medicine_id).maybeSingle(),
+        supabase.from("medicines").select("id, name, brand, strength, dosage_form, reference_price_ngn").eq("id", order.medicine_id).maybeSingle(),
       ]);
 
       return { ...order, patient: patient ?? undefined, medicine: medicine ?? undefined };
@@ -113,7 +113,14 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
             <div><small>Requested</small><strong>{formatDate(order.requested_at)}</strong></div>
           </div>
           {order.patient_note && <p className="pharmacy-queue__instructions"><strong>Patient note</strong>{order.patient_note}</p>}
-          <OrderControls orderId={order.id} status={order.status} availabilityConfirmed={order.availability_confirmed} privatePriceAmount={order.private_price_amount} reviewedAt={order.reviewed_at} />
+          <OrderControls
+            orderId={order.id}
+            status={order.status}
+            availabilityConfirmed={order.availability_confirmed}
+            privatePriceAmount={order.private_price_amount}
+            reviewedAt={order.reviewed_at}
+            referencePrice={order.medicine?.reference_price_ngn ?? null}
+          />
         </article>
       )) : (
         <div className="account-empty-state">

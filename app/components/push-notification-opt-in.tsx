@@ -13,7 +13,7 @@ const subscribeToBrowser = () => () => undefined;
 const getBrowserSupport = () => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
 const getServerSupport = () => false;
 
-export default function PushNotificationOptIn() {
+export default function PushNotificationOptIn({ variant = "patient" }: { variant?: "patient" | "pharmacist" }) {
   const [state, setState] = useState<"idle" | "enabling" | "enabled" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -52,8 +52,17 @@ export default function PushNotificationOptIn() {
   return (
     <aside className="notification-opt-in" aria-live="polite">
       <div>
-        <strong>Get refill reminders</strong>
-        <p>Allow browser notifications so RefillRx can remind you three days before your next refill.</p>
+        {variant === "pharmacist" ? (
+          <>
+            <strong>Get live refill alerts</strong>
+            <p>Allow browser notifications so RefillRx can tell you when a request lands in the queue or a patient replies.</p>
+          </>
+        ) : (
+          <>
+            <strong>Get refill reminders</strong>
+            <p>Allow browser notifications so RefillRx can remind you three days before your next refill.</p>
+          </>
+        )}
       </div>
       {state === "enabled" ? <span className="notification-opt-in__success">Reminders enabled</span> : <button className="button button--light" type="button" onClick={() => void enableNotifications()} disabled={state === "enabling"}>{state === "enabling" ? "Enabling…" : "Enable reminders"}</button>}
       {state === "error" && <small className="notification-opt-in__error">{errorMessage || "Notifications were not enabled. Check your browser permission and try again."}</small>}

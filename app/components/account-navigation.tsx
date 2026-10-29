@@ -21,7 +21,7 @@ const navigation = {
   ],
 } satisfies Record<AccountRole, Array<{ href: string; label: string }>>;
 
-export default function AccountNavigation({ role }: { role: AccountRole }) {
+export default function AccountNavigation({ role, unreadMessages = 0 }: { role: AccountRole; unreadMessages?: number }) {
   const pathname = usePathname();
 
   return (
@@ -35,10 +35,12 @@ export default function AccountNavigation({ role }: { role: AccountRole }) {
         {navigation[role].map((item) => {
           const itemPath = item.href.split("#")[0];
           const active = !item.href.includes("#") && pathname === itemPath;
+          const showBadge = unreadMessages > 0 && itemPath.endsWith("messages");
           return (
             <Link className={`account-sidebar__link${active ? " account-sidebar__link--active" : ""}`} href={item.href} key={item.href} aria-current={active ? "page" : undefined}>
               <span aria-hidden="true" className="account-sidebar__link-dot" />
-              {item.label}
+              <span>{item.label}</span>
+              {showBadge && <span className="account-sidebar__unread" aria-label={`${unreadMessages} unread ${unreadMessages === 1 ? "message" : "messages"}`}>{unreadMessages}</span>}
             </Link>
           );
         })}
