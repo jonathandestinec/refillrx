@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "Keep recurring medicine refills on track with Mani, Benin City.",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/apple-icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/refillrx.svg", type: "image/svg+xml" }],
   },
 };
 
@@ -19,6 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       className="h-full antialiased"
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col">
         {children}

@@ -358,7 +358,7 @@ button:focus-visible, a:focus-visible {
 .patient-preview__next strong, .patient-preview__next span { display: block; }
 .patient-preview__next strong { margin-top: 6px; font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 400; letter-spacing: -0.06em; }
 .patient-preview__next div > span { margin-top: 8px; color: var(--muted); font-size: 11px; }
-.status-pill { padding: 8px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+.status-pill { display: inline-flex; align-items: center; width: max-content; padding: 8px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; }
 .status-pill--lime { background: var(--lime); }
 .patient-preview__status { padding: 18px 4px; color: rgba(17, 17, 17, 0.56); font-size: 11px; }
 .patient-preview__status div { display: flex; align-items: center; gap: 7px; }
@@ -433,33 +433,93 @@ button:focus-visible, a:focus-visible {
 .auth-switch { margin: 26px 0 0; color: var(--muted); font-size: 12px; }
 .auth-switch a, .text-button { color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .account-shell { min-height: 100vh; background: var(--paper); }
-.account-header { display: flex; align-items: center; justify-content: space-between; padding: 28px clamp(24px, 7vw, 110px); border-bottom: 1px solid var(--line); }
+.account-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px clamp(24px, 7vw, 110px); border-bottom: 1px solid var(--line); }
+.account-header__identity { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.account-header__context { padding-left: 18px; border-left: 1px solid var(--line); color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 .text-button { border: 0; background: transparent; cursor: pointer; font: inherit; }
-.account-content { max-width: 920px; margin: 0 auto; padding: clamp(70px, 12vw, 150px) 24px; }
-.account-content h1 { max-width: 720px; margin: 12px 0 24px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(54px, 8vw, 100px); font-weight: 400; letter-spacing: -0.08em; line-height: 0.92; }
-.account-lede { max-width: 500px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
-.account-empty-state { display: grid; gap: 12px; max-width: 520px; margin-top: 56px; padding: 28px; border-radius: 20px; background: var(--white); }
+.account-content { max-width: 1080px; margin: 0 auto; padding: clamp(64px, 9vw, 112px) 24px; }
+.realtime-status { display: inline-flex; align-items: center; gap: 8px; width: max-content; margin: 0 0 24px; color: var(--muted); font-size: 11px; }
+.realtime-status > span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.realtime-status--connected > span { background: var(--green); }
+.realtime-status--error { color: #8f3b31; }
+.realtime-status--error > span { background: #a23c32; }
+.account-intro { max-width: 700px; }
+.account-intro .eyebrow { margin-bottom: 18px; }
+.account-content h1 { max-width: 720px; margin: 0 0 22px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(54px, 8vw, 92px); font-weight: 400; letter-spacing: -0.08em; line-height: 0.92; }
+.account-lede { max-width: 560px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.55; }
+.account-empty-state { display: grid; gap: 12px; max-width: 600px; margin-top: 52px; padding: 30px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+.account-empty-state .eyebrow { margin-bottom: 2px; }
 .account-empty-state strong { font-size: 18px; }
 .account-empty-state span { color: var(--muted); font-size: 14px; line-height: 1.5; }
 .account-empty-state .button { justify-self: start; margin-top: 10px; }
-.account-plan-card { display: grid; gap: 26px; max-width: 720px; margin-top: 56px; padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+.account-empty-state--error { border-color: rgba(162, 60, 50, 0.3); }
+.account-empty-state--error .eyebrow { color: #8f3b31; }
+.pharmacy-queue { display: grid; gap: 18px; margin-top: 60px; }
+.pharmacy-queue__header { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 8px; }
+.pharmacy-queue__header .eyebrow { margin-bottom: 10px; }
+.pharmacy-queue__header h2 { margin: 0; font-size: clamp(22px, 3vw, 32px); letter-spacing: -0.04em; }
+.queue-count { flex: 0 0 auto; color: var(--muted); font-size: 12px; }
+.pharmacy-queue__item { display: grid; gap: 24px; padding: clamp(22px, 3vw, 30px); border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+.pharmacy-queue__topline { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.pharmacy-queue__topline h2 { margin: 10px 0 6px; font-size: clamp(26px, 3vw, 40px); }
+.pharmacy-queue__topline p:not(.eyebrow) { margin: 0; color: var(--muted); }
+.pharmacy-queue__details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.pharmacy-queue__details div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.pharmacy-queue__details small { color: var(--muted); font-size: 11px; }
+.pharmacy-queue__instructions, .pharmacy-queue__privacy { display: grid; gap: 6px; margin: 0; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); }
+.pharmacy-queue__instructions strong { color: var(--ink); }
+.pharmacy-queue__privacy { font-size: 12px; }
+.pharmacy-queue__actions { display: flex; align-items: center; gap: 18px; padding-top: 4px; }
+.pharmacy-review { display: grid; grid-template-columns: minmax(180px, 0.8fr) minmax(180px, 1fr) auto; align-items: end; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+.pharmacy-review__heading { grid-column: 1 / -1; display: grid; gap: 6px; }
+.pharmacy-review__heading .eyebrow { margin: 0; }
+.pharmacy-review__heading p:last-child { max-width: 560px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.pharmacy-review .auth-field { gap: 7px; }
+.pharmacy-review .auth-field span { font-size: 11px; }
+.pharmacy-review select, .pharmacy-review input { width: 100%; min-height: 46px; padding: 0 12px; border: 1px solid rgba(17, 17, 17, 0.28); border-radius: 9px; color: var(--ink); background-color: var(--white); font: inherit; outline: none; }
+.pharmacy-review select { appearance: none; padding-right: 36px; background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: calc(100% - 17px) 20px, calc(100% - 12px) 20px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+.pharmacy-review select:focus, .pharmacy-review input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(79, 159, 127, 0.18); }
+.pharmacy-review .button { min-height: 46px; white-space: nowrap; }
+.order-chat { display: grid; gap: 14px; padding-top: 20px; border-top: 1px solid var(--line); }
+.order-chat__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.order-chat__heading h3 { margin: 7px 0 0; font-size: 18px; }
+.order-chat__heading > span { color: var(--muted); font-size: 11px; }
+.order-chat__messages { display: grid; gap: 8px; max-height: 220px; overflow: auto; }
+.order-chat__message-row { display: grid; justify-items: start; gap: 4px; }
+.order-chat__message-row--mine { justify-items: end; }
+.order-chat__message-meta { color: var(--muted); font-size: 10px; }
+.order-chat__message { max-width: 80%; margin: 0; padding: 10px 12px; border-radius: 12px 12px 12px 3px; color: var(--ink); background: var(--paper); font-size: 13px; line-height: 1.45; }
+.order-chat__message--mine { justify-self: end; border-radius: 12px 12px 3px 12px; color: var(--white); background: var(--ink); }
+.order-chat__empty, .order-chat__feedback { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.order-chat__form { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.order-chat__form textarea { min-height: 44px; padding: 11px 12px; resize: vertical; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: var(--white); font: inherit; }
+.account-plan-card { display: grid; gap: 26px; margin-top: 60px; padding: clamp(22px, 4vw, 34px); border: 1px solid var(--line); border-radius: 24px; background: var(--white); }
 .account-plan-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
 .account-plan-card__header .eyebrow { margin: 0 0 10px; }
 .account-plan-card__header h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(30px, 5vw, 48px); font-weight: 400; letter-spacing: -0.07em; line-height: 0.98; }
 .account-plan-card__header > div > span { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
 .status-pill--yellow { color: var(--ink); background: var(--yellow); }
 .status-pill--red { color: #7f2d26; background: #f3c2b8; }
-.account-plan-card__details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.account-plan-card__details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .account-plan-card__details div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
 .account-plan-card__details small { color: var(--muted); font-size: 11px; }
 .account-plan-card__details strong { font-size: 14px; }
 .account-plan-card__note { max-width: 600px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.account-plan-card__footer { display: flex; justify-content: space-between; gap: 16px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.account-action-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 28px; padding: 22px; border-radius: 18px; background: var(--paper); }
+.account-action-panel .eyebrow { margin: 0 0 8px; }
+.account-action-panel h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -0.03em; }
+.account-action-panel p:last-child { max-width: 520px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.refill-request { display: grid; gap: 10px; justify-items: start; }
+.refill-request-status { display: grid; gap: 4px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.refill-request-status strong { color: var(--ink); font-size: 14px; }
 .payment-checkout { display: grid; gap: 12px; align-items: start; }
 .payment-checkout .button { justify-self: start; }
 .payment-checkout__message { max-width: 620px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .payment-checkout__message--error { color: #8f3b31; }
 .payment-checkout__message--success { color: var(--green); }
+.button { white-space: nowrap; flex-shrink: 0; }
+.button--light { color: var(--ink); border-color: var(--line); background: var(--white); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .plan-content { max-width: 1080px; margin: 0 auto; padding: clamp(70px, 10vw, 130px) 24px; }
 .plan-heading { max-width: 700px; margin-bottom: 52px; }
@@ -503,6 +563,13 @@ button:focus-visible, a:focus-visible {
   .hero-bottomline span:first-child { display: none; }
   .section-pad { padding: 84px 24px; }
   .deck-heading, .outcome-section, .outcome-section--reverse, .trust-section, .service-card { grid-template-columns: 1fr; }
+  .pharmacy-queue__topline { display: grid; }
+  .pharmacy-queue__details { grid-template-columns: 1fr; }
+  .pharmacy-review, .order-chat__form, .account-action-panel { grid-template-columns: 1fr; }
+  .pharmacy-review__heading { grid-column: auto; }
+  .pharmacy-review .button { justify-self: start; }
+  .pharmacy-queue__header { align-items: start; flex-direction: column; gap: 12px; }
+  .account-header__context { display: none; }
   .deck-section { padding-right: 16px; padding-left: 16px; }
   .deck-wrap { min-height: 500px; margin-top: 44px; }
   .deck { min-height: 430px; }
@@ -522,7 +589,6 @@ button:focus-visible, a:focus-visible {
   .account-plan-card { padding: 22px 18px; }
   .account-plan-card__header { flex-direction: column; gap: 16px; }
   .account-plan-card__details { grid-template-columns: 1fr; }
-  .account-plan-card__footer { flex-direction: column; gap: 7px; }
   .site-footer { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
   .footer-location { text-align: right; }
   .footer-links { grid-column: 1 / -1; justify-content: flex-start; }

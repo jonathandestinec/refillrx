@@ -173,5 +173,23 @@ export async function verifyAndActivatePayment(
     },
   }).eq("id", payment.id);
 
+  const reminderDate = new Date(`${draft.next_refill_date}T00:00:00.000Z`);
+  reminderDate.setUTCDate(reminderDate.getUTCDate() - 3);
+  const { error: reminderError } = await admin.from("notifications").upsert({
+    patient_id: patientId,
+    refill_plan_id: planId,
+    type: "refill_reminder",
+    scheduled_for: reminderDate.toISOString(),
+    status: "scheduled",
+  }, { onConflict: "refill_plan_id,type" });
+  if (reminderError) {
+    console.error("Refill reminder scheduling failed", {
+      code: reminderError.code,
+      message: reminderError.message,
+      details: reminderError.details,
+      hint: reminderError.hint,
+    });
+  }
+
   return { ok: true, planId, status: "succeeded" };
 }

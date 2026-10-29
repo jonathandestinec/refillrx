@@ -26,3 +26,21 @@ self.addEventListener("fetch", (event) => {
     ),
   );
 });
+
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || "RefillRx update";
+  const options = {
+    body: data.body || "There is an update about your refill.",
+    icon: "/icons/refillrx.svg",
+    badge: "/icons/refillrx.svg",
+    data: { url: data.url || "/dashboard" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || "/dashboard";
+  event.waitUntil(clients.openWindow(target));
+});
