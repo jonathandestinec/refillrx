@@ -14,10 +14,6 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
   useEffect(() => {
-    setLiveMessages(messages);
-  }, [messages]);
-
-  useEffect(() => {
     const supabase = createClient();
     const channel = supabase
       .channel(`refillrx-chat-${orderId}`)

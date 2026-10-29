@@ -175,13 +175,26 @@ export async function verifyAndActivatePayment(
 
   const reminderDate = new Date(`${draft.next_refill_date}T00:00:00.000Z`);
   reminderDate.setUTCDate(reminderDate.getUTCDate() - 3);
-  const { error: reminderError } = await admin.from("notifications").upsert({
+  const { data: existingReminder, error: reminderLookupError } = await admin
+    .from("notifications")
+    .select("id")
+    .eq("patient_id", patientId)
+    .eq("refill_plan_id", planId)
+    .eq("type", "refill_reminder")
+    .maybeSingle<{ id: string }>();
+
+  const reminderPayload = {
     patient_id: patientId,
     refill_plan_id: planId,
     type: "refill_reminder",
     scheduled_for: reminderDate.toISOString(),
     status: "scheduled",
-  }, { onConflict: "refill_plan_id,type" });
+  };
+  const reminderError = reminderLookupError
+    ? reminderLookupError
+    : existingReminder
+      ? (await admin.from("notifications").update(reminderPayload).eq("id", existingReminder.id)).error
+      : (await admin.from("notifications").insert(reminderPayload)).error;
   if (reminderError) {
     console.error("Refill reminder scheduling failed", {
       code: reminderError.code,

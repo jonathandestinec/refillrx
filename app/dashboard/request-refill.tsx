@@ -14,10 +14,6 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
   useEffect(() => {
-    setLiveOrder({ status, price, currency });
-  }, [currency, price, status]);
-
-  useEffect(() => {
     const supabase = createClient();
     const channel = supabase
       .channel(`refillrx-plan-${planId}`)

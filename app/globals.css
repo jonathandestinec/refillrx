@@ -443,6 +443,11 @@ button:focus-visible, a:focus-visible {
 .realtime-status--connected > span { background: var(--green); }
 .realtime-status--error { color: #8f3b31; }
 .realtime-status--error > span { background: #a23c32; }
+.notification-opt-in { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 40px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); }
+.notification-opt-in strong { font-size: 13px; }
+.notification-opt-in p { max-width: 520px; margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.notification-opt-in__success { color: var(--green); font-size: 12px; font-weight: 700; }
+.notification-opt-in__error { color: #8f3b31; font-size: 11px; }
 .account-intro { max-width: 700px; }
 .account-intro .eyebrow { margin-bottom: 18px; }
 .account-content h1 { max-width: 720px; margin: 0 0 22px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(54px, 8vw, 92px); font-weight: 400; letter-spacing: -0.08em; line-height: 0.92; }
@@ -470,6 +475,10 @@ button:focus-visible, a:focus-visible {
 .pharmacy-queue__instructions strong { color: var(--ink); }
 .pharmacy-queue__privacy { font-size: 12px; }
 .pharmacy-queue__actions { display: flex; align-items: center; gap: 18px; padding-top: 4px; }
+.pharmacy-order-status { display: flex; align-items: center; gap: 10px; }
+.pharmacy-order-status__live { color: var(--muted); font-size: 10px; }
+.pharmacy-order-status__live--connected { color: var(--green); }
+.pharmacy-order-status__live--error { color: #8f3b31; }
 .pharmacy-review { display: grid; grid-template-columns: minmax(180px, 0.8fr) minmax(180px, 1fr) auto; align-items: end; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
 .pharmacy-review__heading { grid-column: 1 / -1; display: grid; gap: 6px; }
 .pharmacy-review__heading .eyebrow { margin: 0; }
@@ -512,6 +521,9 @@ button:focus-visible, a:focus-visible {
 .refill-request { display: grid; gap: 10px; justify-items: start; }
 .refill-request-status { display: grid; gap: 4px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .refill-request-status strong { color: var(--ink); font-size: 14px; }
+.refill-request-status__live { color: var(--muted); font-size: 10px; }
+.refill-request-status__live--connected { color: var(--green); }
+.refill-request-status__live--error { color: #8f3b31; }
 .payment-checkout { display: grid; gap: 12px; align-items: start; }
 .payment-checkout .button { justify-self: start; }
 .payment-checkout__message { max-width: 620px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }

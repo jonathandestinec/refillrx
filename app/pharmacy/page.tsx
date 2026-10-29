@@ -81,7 +81,6 @@ export default async function PharmacyPage() {
         </form>
       </header>
       <section className="account-content account-content--pharmacy" id="account-main" tabIndex={-1}>
-        <RealtimeOrderSync role="pharmacist" patientId={claims.sub} />
         <div className="account-intro">
           <p className="eyebrow">Mani, Benin City</p>
           <h1>Refill queue.</h1>

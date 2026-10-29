@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import BrandMark from "@/app/components/brand-mark";
 import OrderChat from "@/app/components/order-chat";
+import PushNotificationOptIn from "@/app/components/push-notification-opt-in";
 import { MONTHLY_PLAN_PAYMENT_LABEL } from "@/lib/payments";
 import { createClient } from "@/lib/supabase/server";
 
@@ -123,6 +124,7 @@ export default async function DashboardPage() {
           <h1>Your next refill.</h1>
           <p className="account-lede">{profile?.full_name ? `Welcome, ${profile.full_name}.` : "Your refill plan and messages appear here."} Mani confirms availability and medicine pricing privately.</p>
         </div>
+        <PushNotificationOptIn />
         {activePlan ? (
           <section className="account-plan-card" aria-labelledby="active-plan-title">
             <div className="account-plan-card__header">

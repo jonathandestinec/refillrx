@@ -18,10 +18,6 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
   useEffect(() => {
-    setLiveOrder({ status, availabilityConfirmed, privatePriceAmount, reviewedAt });
-  }, [availabilityConfirmed, privatePriceAmount, reviewedAt, status]);
-
-  useEffect(() => {
     const supabase = createClient();
     const channel = supabase
       .channel(`refillrx-pharmacy-order-${orderId}`)
