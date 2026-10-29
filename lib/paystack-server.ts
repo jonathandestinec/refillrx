@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MONTHLY_PLAN_PAYMENT } from "@/lib/payments";
+import { scheduleRefillReminder } from "@/lib/refill-reminders";
 
 type PaymentRow = {
   id: string;
@@ -173,35 +174,13 @@ export async function verifyAndActivatePayment(
     },
   }).eq("id", payment.id);
 
-  const reminderDate = new Date(`${draft.next_refill_date}T00:00:00.000Z`);
-  reminderDate.setUTCDate(reminderDate.getUTCDate() - 3);
-  const { data: existingReminder, error: reminderLookupError } = await admin
-    .from("notifications")
-    .select("id")
-    .eq("patient_id", patientId)
-    .eq("refill_plan_id", planId)
-    .eq("type", "refill_reminder")
-    .maybeSingle<{ id: string }>();
-
-  const reminderPayload = {
-    patient_id: patientId,
-    refill_plan_id: planId,
-    type: "refill_reminder",
-    scheduled_for: reminderDate.toISOString(),
-    status: "scheduled",
-  };
-  const reminderError = reminderLookupError
-    ? reminderLookupError
-    : existingReminder
-      ? (await admin.from("notifications").update(reminderPayload).eq("id", existingReminder.id)).error
-      : (await admin.from("notifications").insert(reminderPayload)).error;
+  const reminderError = await scheduleRefillReminder(admin, {
+    patientId,
+    planId,
+    nextRefillDate: draft.next_refill_date,
+  });
   if (reminderError) {
-    console.error("Refill reminder scheduling failed", {
-      code: reminderError.code,
-      message: reminderError.message,
-      details: reminderError.details,
-      hint: reminderError.hint,
-    });
+    console.error("Refill reminder scheduling failed", reminderError);
   }
 
   return { ok: true, planId, status: "succeeded" };

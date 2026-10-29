@@ -2,24 +2,16 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 
-import BrandMark from "@/app/components/brand-mark";
-import OrderChat from "@/app/components/order-chat";
+import AccountNavigation from "@/app/components/account-navigation";
 import PushNotificationOptIn from "@/app/components/push-notification-opt-in";
 import { MONTHLY_PLAN_PAYMENT_LABEL } from "@/lib/payments";
+import { formatDate } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/server";
 
 import PaymentCheckout from "./payment-checkout";
 import RequestRefill from "./request-refill";
 
 export const instant = false;
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-NG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${value}T00:00:00`));
-}
 
 export default async function DashboardPage() {
   await connection();
@@ -66,14 +58,6 @@ export default async function DashboardPage() {
         .maybeSingle()
     : { data: null };
 
-  const { data: activeMessages } = activeOrder
-    ? await supabase
-        .from("refill_order_messages")
-        .select("id, sender_id, body, created_at")
-        .eq("order_id", activeOrder.id)
-        .order("created_at", { ascending: true })
-    : { data: [] };
-
   const { data: draft } = await supabase
     .from("refill_plan_drafts")
     .select("id, medicine_id, frequency_days, next_refill_date, expires_at")
@@ -101,6 +85,19 @@ export default async function DashboardPage() {
   const draftPayment = (recentPayments ?? []).find(
     (payment) => (payment.metadata as { draft_id?: string } | null)?.draft_id === draft?.id,
   );
+  const { data: historyOrders } = await supabase
+    .from("refill_orders")
+    .select("id, medicine_id, status, requested_at, completed_at")
+    .eq("patient_id", claims.sub)
+    .in("status", ["completed", "cancelled"])
+    .order("requested_at", { ascending: false })
+    .limit(8);
+  const historyMedicineIds = [...new Set((historyOrders ?? []).map((order) => order.medicine_id))];
+  const { data: historyMedicines } = historyMedicineIds.length
+    ? await supabase.from("medicines").select("id, name, strength").in("id", historyMedicineIds)
+    : { data: [] };
+  const historyMedicineById = new Map((historyMedicines ?? []).map((medicine) => [medicine.id, medicine]));
+  const safeHistoryOrders = historyOrders ?? [];
   const paymentConfigured = Boolean(
     process.env.PAYSTACK_SECRET_KEY &&
     (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
@@ -109,16 +106,9 @@ export default async function DashboardPage() {
   return (
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
-      <header className="account-header">
-        <div className="account-header__identity">
-          <BrandMark className="auth-brand" />
-          <span className="account-header__context">Patient account</span>
-        </div>
-        <form action="/auth/signout" method="post">
-          <button className="text-button" type="submit">Sign out</button>
-        </form>
-      </header>
-      <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
+      <div className="account-app">
+        <AccountNavigation role="patient" />
+        <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
         <div className="account-intro">
           <p className="eyebrow">Refill plan</p>
           <h1>Your next refill.</h1>
@@ -151,7 +141,6 @@ export default async function DashboardPage() {
               </div>
               <RequestRefill planId={activePlan.id} status={activeOrder?.status} price={activeOrder?.private_price_amount} currency={activeOrder?.private_price_currency} />
             </div>
-            {activeOrder && <OrderChat orderId={activeOrder.id} viewerId={claims.sub} participantLabel="Mani" messages={activeMessages ?? []} />}
           </section>
         ) : draft ? (
           <section className="account-plan-card" aria-labelledby="draft-title">
@@ -184,7 +173,32 @@ export default async function DashboardPage() {
             <Link className="button button--dark" href="/dashboard/plans/new">Register a refill plan <span aria-hidden="true">↗</span></Link>
           </div>
         )}
-      </section>
+        <section className="account-history" id="history" aria-labelledby="history-title">
+            <div className="account-history__heading">
+              <div>
+                <p className="eyebrow">Previous refills</p>
+                <h2 id="history-title">Your refill history</h2>
+              </div>
+              <span>Last {safeHistoryOrders.length} {safeHistoryOrders.length === 1 ? "order" : "orders"}</span>
+            </div>
+            {safeHistoryOrders.length ? <div className="account-history__list">
+              {safeHistoryOrders.map((order) => {
+                const medicine = historyMedicineById.get(order.medicine_id);
+                const completed = order.status === "completed";
+                return (
+                  <div className="account-history__item" key={order.id}>
+                    <div>
+                      <strong>{medicine?.name ?? "Medicine unavailable"}{medicine?.strength ? ` ${medicine.strength}` : ""}</strong>
+                      <span>Requested {formatDate(order.requested_at)}</span>
+                    </div>
+                    <span className={`status-pill ${completed ? "status-pill--lime" : "status-pill--yellow"}`}>{completed ? "Completed" : "Cancelled"}</span>
+                  </div>
+                );
+              })}
+            </div> : <p className="account-history__empty">Completed or cancelled refills will appear here.</p>}
+        </section>
+        </section>
+      </div>
     </main>
   );
 }

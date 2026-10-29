@@ -22,8 +22,8 @@ export default function Home() {
             <Link href="/login">Sign in</Link>
           </div>
 
-          <Link className="nav-cta" href="#service">
-            See the service <span aria-hidden="true">↗</span>
+          <Link className="nav-cta" href="/sign-up">
+            Start a refill plan <span aria-hidden="true">↗</span>
           </Link>
         </nav>
 
@@ -39,11 +39,11 @@ export default function Home() {
               request a refill, and hear from Mani when it is ready.
             </p>
             <div className="hero-actions">
-              <Link className="button button--lime" href="#service">
-                See how the service works <span aria-hidden="true">↗</span>
+              <Link className="button button--lime" href="/sign-up">
+                Start a refill plan <span aria-hidden="true">↗</span>
               </Link>
               <Link className="text-link text-link--light" href="#use-cases">
-                Explore the workflow <span aria-hidden="true">↓</span>
+                See how a refill moves <span aria-hidden="true">↓</span>
               </Link>
             </div>
             <div className="hero-note">
@@ -82,7 +82,7 @@ export default function Home() {
         <div className="hero-bottomline">
           <span>Recurring medicine, on schedule.</span>
           <span className="scroll-cue" aria-hidden="true">↓</span>
-          <span>Explore the workflow</span>
+          <span>See how a refill moves</span>
         </div>
       </section>
 
@@ -268,7 +268,7 @@ export default function Home() {
             </div>
             <div className="service-card__right">
               <p><strong>{MONTHLY_PLAN_PAYMENT_LABEL}.</strong> One payment covers one month of refill planning and status updates. Payment happens before registering a plan.</p>
-              <Link className="button button--dark" href="#top">Review the service <span aria-hidden="true">↗</span></Link>
+              <Link className="button button--dark" href="/sign-up">Start a refill plan <span aria-hidden="true">↗</span></Link>
               <small>One-time or in-person payment remains available for a refill request.</small>
             </div>
           </div>

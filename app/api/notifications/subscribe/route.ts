@@ -33,6 +33,9 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("Push subscription save failed", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+    if (error.code === "PGRST205") {
+      return NextResponse.json({ message: "Push reminders are not set up in Supabase yet. Apply the push subscriptions migration, then try again." }, { status: 503 });
+    }
     return NextResponse.json({ message: "We could not enable notifications yet." }, { status: 500 });
   }
 

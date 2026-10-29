@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { reviewRefillOrder, updateRefillOrderStatus } from "@/app/actions/refill-orders";
+import { reviewRefillOrder, updateRefillOrderStatus, type OrderStatusState } from "@/app/actions/refill-orders";
+import { useActionState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type OrderControlsProps = {
@@ -14,6 +15,7 @@ type OrderControlsProps = {
 };
 
 export default function OrderControls({ orderId, status, availabilityConfirmed, privatePriceAmount, reviewedAt }: OrderControlsProps) {
+  const [statusState, statusAction, statusPending] = useActionState(updateRefillOrderStatus, null as OrderStatusState);
   const [liveOrder, setLiveOrder] = useState({ status, availabilityConfirmed, privatePriceAmount, reviewedAt });
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
@@ -76,11 +78,12 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         </label>
         <button className="button button--light" type="submit">Save private review</button>
       </form>
-      <form className="pharmacy-queue__actions" action={updateRefillOrderStatus}>
+      <form className="pharmacy-queue__actions" action={statusAction}>
         <input type="hidden" name="order_id" value={orderId} />
-        {nextStatus === "ready" && !reviewComplete ? <button className="button button--dark" disabled type="button">Save review before pickup</button> : <button className="button button--dark" name="status" value={nextStatus} type="submit">{nextLabel} <span aria-hidden="true">↗</span></button>}
-        {liveOrder.status !== "ready" && <button className="text-button" name="status" value="cancelled" type="submit">Cancel request</button>}
+        {nextStatus === "ready" && !reviewComplete ? <button className="button button--dark" disabled type="button">Save review before pickup</button> : <button className="button button--dark" name="status" value={nextStatus} type="submit" disabled={statusPending}>{statusPending ? "Saving…" : nextLabel} {!statusPending && <span aria-hidden="true">↗</span>}</button>}
+        {liveOrder.status !== "ready" && <button className="text-button" name="status" value="cancelled" type="submit" disabled={statusPending}>Cancel request</button>}
       </form>
+      {statusState?.message && <p className={statusState.success ? "order-chat__feedback" : "auth-error"} role="status">{statusState.message}</p>}
     </>
   );
 }

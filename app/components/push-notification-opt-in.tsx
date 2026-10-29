@@ -15,6 +15,7 @@ const getServerSupport = () => false;
 
 export default function PushNotificationOptIn() {
   const [state, setState] = useState<"idle" | "enabling" | "enabled" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const supported = useSyncExternalStore(subscribeToBrowser, getBrowserSupport, getServerSupport);
   const vapidPublicKey = publicKey;
@@ -23,6 +24,7 @@ export default function PushNotificationOptIn() {
 
   async function enableNotifications() {
     setState("enabling");
+    setErrorMessage("");
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -36,9 +38,13 @@ export default function PushNotificationOptIn() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(subscription.toJSON()),
       });
-      if (!response.ok) throw new Error("Subscription was not saved");
+      if (!response.ok) {
+        const result = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(result?.message ?? "We could not save the notification subscription.");
+      }
       setState("enabled");
-    } catch {
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Notifications were not enabled.");
       setState("error");
     }
   }
@@ -50,7 +56,7 @@ export default function PushNotificationOptIn() {
         <p>Allow browser notifications so RefillRx can remind you three days before your next refill.</p>
       </div>
       {state === "enabled" ? <span className="notification-opt-in__success">Reminders enabled</span> : <button className="button button--light" type="button" onClick={() => void enableNotifications()} disabled={state === "enabling"}>{state === "enabling" ? "Enabling…" : "Enable reminders"}</button>}
-      {state === "error" && <small className="notification-opt-in__error">Notifications were not enabled. Check your browser permission and try again.</small>}
+      {state === "error" && <small className="notification-opt-in__error">{errorMessage || "Notifications were not enabled. Check your browser permission and try again."}</small>}
     </aside>
   );
 }

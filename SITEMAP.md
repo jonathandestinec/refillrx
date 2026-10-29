@@ -2,6 +2,10 @@
 
 Pharmacy: **Mani, Benin City**
 
+## Current MVP route mapping
+
+The implemented MVP uses `/dashboard` for the patient workspace and `/pharmacy` for the pharmacist workspace. Conversations have dedicated tabs at `/dashboard/messages` and `/pharmacy/messages`; they are not embedded in the overview or queue cards.
+
 ## Route tree
 
 ```text

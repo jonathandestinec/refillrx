@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useEffect, useState } from "react";
 
 import { sendOrderMessage, type MessageState } from "@/app/actions/refill-orders";
+import { formatDateTime } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/client";
 
 type OrderMessage = { id: string; sender_id: string; body: string; created_at: string };
@@ -20,13 +21,11 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "refill_order_messages", filter: `order_id=eq.${orderId}` },
-        async () => {
-          const { data } = await supabase
-            .from("refill_order_messages")
-            .select("id, sender_id, body, created_at")
-            .eq("order_id", orderId)
-            .order("created_at", { ascending: true });
-          if (data) setLiveMessages(data);
+        (payload) => {
+          if (payload.eventType !== "INSERT") return;
+          const message = payload.new as OrderMessage & { order_id?: string };
+          if (message.order_id !== orderId) return;
+          setLiveMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
         },
       )
       .subscribe((status) => {
@@ -39,6 +38,16 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
     };
   }, [orderId]);
 
+  const displayedMessages = state?.sentMessage && !liveMessages.some((item) => item.id === state.sentMessage?.id)
+    ? [...liveMessages, state.sentMessage]
+    : liveMessages;
+
+  useEffect(() => {
+    if (!state?.success) return;
+    const form = document.getElementById(`message-${orderId}`) as HTMLTextAreaElement | null;
+    if (form) form.value = "";
+  }, [orderId, state]);
+
   return (
     <section className="order-chat" aria-labelledby={`chat-${orderId}`}>
       <div className="order-chat__heading">
@@ -48,13 +57,13 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
         </div>
         <span>{liveState === "connected" ? "Private · live" : "Private"}</span>
       </div>
-      {liveMessages.length ? (
+      {displayedMessages.length ? (
         <div className="order-chat__messages">
-          {liveMessages.map((message) => {
+          {displayedMessages.map((message) => {
             const mine = message.sender_id === viewerId;
             return (
               <div className={`order-chat__message-row${mine ? " order-chat__message-row--mine" : ""}`} key={message.id}>
-                <span className="order-chat__message-meta">{mine ? "You" : participantLabel} · <time dateTime={message.created_at}>{new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(message.created_at))}</time></span>
+                <span className="order-chat__message-meta">{mine ? "You" : participantLabel} · <time dateTime={message.created_at}>{formatDateTime(message.created_at)}</time></span>
                 <p className={mine ? "order-chat__message order-chat__message--mine" : "order-chat__message"}>{message.body}</p>
               </div>
             );
