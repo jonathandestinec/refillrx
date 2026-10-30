@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { requestRefill, type RefillOrderState } from "@/app/actions/refill-orders";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +13,16 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
   const [state, action, pending] = useActionState(requestRefill, initialState);
   const [liveOrder, setLiveOrder] = useState({ status, price, currency });
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
+  const router = useRouter();
+
+  // The action result is the fastest source of truth for the patient's own
+  // submit; realtime keeps the view in sync with pharmacist-side updates.
+  useEffect(() => {
+    if (state?.success) {
+      if (state.order) setLiveOrder({ status: state.order.status, price: state.order.private_price_amount, currency: state.order.private_price_currency });
+      else router.refresh();
+    }
+  }, [state, router]);
 
   useEffect(() => {
     const supabase = createClient();

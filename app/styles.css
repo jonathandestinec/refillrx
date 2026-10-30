@@ -4,10 +4,11 @@
   --ink: #111111;
   --paper: #f1efe8;
   --white: #fffdf8;
-  --muted: #76756e;
+  --muted: #6a6963;
   --line: rgba(17, 17, 17, 0.14);
   --lime: #d8f16d;
   --green: #4a9d7a;
+  --green-deep: #2e7d5b;
   --yellow: #f2ed63;
   --pink: #f1a4c8;
   --blue: #9fd3ee;
@@ -191,6 +192,10 @@ button:focus-visible, a:focus-visible {
   font-style: italic;
 }
 
+.service-card h2 em {
+  color: var(--ink);
+}
+
 .hero-description {
   max-width: 410px;
   margin: 30px 0 0;
@@ -220,7 +225,7 @@ button:focus-visible, a:focus-visible {
 .hero-art__image { object-fit: cover; }
 .hero-art__caption { position: absolute; right: 22px; bottom: 21px; left: 22px; text-transform: none; }
 .hero-art__caption small, .hero-art__caption strong { display: block; }
-.hero-art__caption small { margin-bottom: 3px; color: rgba(17, 17, 17, 0.56); font-size: 10px; font-weight: 400; }
+.hero-art__caption small { margin-bottom: 3px; color: var(--ink); font-size: 10px; font-weight: 400; }
 .hero-art__caption strong { font-size: 15px; }
 
 .hero-bottomline { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; max-width: 1340px; margin: 0 auto; color: rgba(255, 253, 249, 0.48); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
@@ -259,7 +264,7 @@ button:focus-visible, a:focus-visible {
 .use-case-card__art { position: relative; display: block; flex: 1; min-height: 220px; margin: 10px -12px -10px; }
 .use-case-card__art img { object-fit: contain; pointer-events: none; }
 .use-case-card__hint { opacity: 0.58; }
-.use-case-card__back-label { color: var(--green); }
+.use-case-card__back-label { color: var(--green-deep); }
 .use-case-card__back-title { max-width: 260px; margin-top: auto; font-family: Georgia, "Times New Roman", serif; font-size: 42px; letter-spacing: -0.08em; line-height: 0.94; }
 .use-case-card__back-detail { margin-top: 18px; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .use-case-card__back-action { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -272,7 +277,7 @@ button:focus-visible, a:focus-visible {
 .outcome-art { overflow: hidden; border-radius: 32px; transform: rotate(2deg); }
 .outcome-art img { display: block; width: 100%; height: auto; }
 .outcome-copy h2 { max-width: 700px; margin: 0 0 27px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(44px, 5.8vw, 78px); font-weight: 400; letter-spacing: -0.07em; line-height: 0.96; }
-.outcome-copy h2 span, .trust-copy h2 span { color: var(--green); font-style: italic; }
+.outcome-copy h2 span, .trust-copy h2 span { color: var(--green-deep); font-style: italic; }
 .outcome-note { display: inline-flex; margin: 16px 0 0; padding: 10px 14px; border-radius: 999px; color: var(--ink); background: var(--lime); font-size: 11px; font-weight: 700; }
 
 .patient-section {
@@ -297,7 +302,7 @@ button:focus-visible, a:focus-visible {
 
 .patient-section__copy h2 span,
 .faq-section h2 span {
-  color: var(--green);
+  color: var(--green-deep);
   font-style: italic;
 }
 
@@ -353,10 +358,10 @@ button:focus-visible, a:focus-visible {
 
 .patient-preview__topbar { margin-bottom: 56px; }
 .patient-preview__mini-brand { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; letter-spacing: -0.07em; }
-.patient-preview__mini-brand > span:last-child { color: var(--green); }
+.patient-preview__mini-brand > span:last-child { color: #1d5c42; }
 .patient-preview__mini-brand .medicine-mark { width: 18px; height: 18px; }
 .patient-preview__notification { display: grid; width: 27px; height: 27px; place-items: center; border-radius: 50%; color: var(--ink); background: var(--lime); font-size: 11px; font-weight: 800; }
-.patient-preview__greeting small, .patient-preview__next small, .chat-preview small { display: block; color: rgba(17, 17, 17, 0.52); font-size: 11px; }
+.patient-preview__greeting small, .patient-preview__next small, .chat-preview small { display: block; color: rgba(17, 17, 17, 0.66); font-size: 11px; }
 .patient-preview__greeting h3 { margin: 7px 0 25px; font-family: Georgia, "Times New Roman", serif; font-size: 34px; font-weight: 400; letter-spacing: -0.07em; }
 .patient-preview__next { align-items: flex-start; gap: 16px; padding: 20px; border-radius: 22px; background: #fffdf9; }
 .patient-preview__next strong, .patient-preview__next span { display: block; }
@@ -364,7 +369,7 @@ button:focus-visible, a:focus-visible {
 .patient-preview__next div > span { margin-top: 8px; color: var(--muted); font-size: 11px; }
 .status-pill { display: inline-flex; align-items: center; width: max-content; padding: 8px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; }
 .status-pill--lime { background: var(--lime); }
-.patient-preview__status { padding: 18px 4px; color: rgba(17, 17, 17, 0.56); font-size: 11px; }
+.patient-preview__status { padding: 18px 4px; color: rgba(17, 17, 17, 0.70); font-size: 11px; }
 .patient-preview__status div { display: flex; align-items: center; gap: 7px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
 .chat-preview { gap: 12px; margin-top: 8px; padding: 16px; border-radius: 20px; color: #fffdf9; background: var(--ink); }
@@ -406,7 +411,7 @@ button:focus-visible, a:focus-visible {
 .service-card h2 { max-width: 700px; font-size: clamp(48px, 6vw, 88px); line-height: 0.94; }
 .service-card__right { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; }
 .service-card__right p { max-width: 360px; margin: 0 0 24px; color: rgba(17, 17, 17, 0.66); font-size: 15px; line-height: 1.5; }
-.service-card__right small { max-width: 300px; margin-top: 15px; color: rgba(17, 17, 17, 0.52); font-size: 11px; line-height: 1.4; }
+.service-card__right small { max-width: 300px; margin-top: 15px; color: rgba(17, 17, 17, 0.70); font-size: 11px; line-height: 1.4; }
 
 .site-footer { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 30px; padding: 28px clamp(24px, 7vw, 110px) 46px; }
 .brand-mark--dark { color: var(--ink); }
@@ -452,6 +457,16 @@ button:focus-visible, a:focus-visible {
 .account-sidebar__link > span:last-child:not(:last-child) { flex: 1 1 auto; }
 .account-sidebar__unread { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--orange); color: var(--white); font-size: 11px; font-weight: 600; }
 .messages-page__unread { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: 999px; background: var(--orange); color: var(--white); font-size: 12px; font-weight: 600; }
+
+.notifications-feed { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.notifications-feed__item { display: grid; gap: 8px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 18px; background: var(--white); }
+.notifications-feed__item--unread { border-color: var(--ink); }
+.notifications-feed__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.notifications-feed__type { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.notifications-feed__top .status-pill { min-height: 22px; padding: 0 8px; font-size: 11px; }
+.notifications-feed strong { display: block; margin-top: 6px; font-size: 14px; }
+.notifications-feed p { margin: 4px 0 0; max-width: 640px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.notifications-feed time { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
 .account-sidebar__footer { display: grid; gap: 18px; margin-top: auto; padding: 18px 12px 0; border-top: 1px solid var(--line); }
 .account-sidebar__footer div { display: grid; gap: 5px; }
 .account-sidebar__footer .account-sidebar__label { margin: 0; }
@@ -586,6 +601,16 @@ button:focus-visible, a:focus-visible {
 .plan-heading { max-width: 700px; margin-bottom: 52px; }
 .plan-heading h1 { max-width: 650px; margin: 12px 0 24px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(54px, 8vw, 100px); font-weight: 400; letter-spacing: -0.08em; line-height: 0.92; }
 .plan-form { display: grid; gap: 14px; max-width: 760px; }
+
+.plan-modal { width: min(680px, calc(100vw - 32px)); max-width: 100%; max-height: min(86vh, 900px); padding: 0; border: none; border-radius: 22px; background: var(--paper); color: var(--ink); box-shadow: 0 24px 60px rgba(17, 17, 17, 0.28); overflow-y: auto; overscroll-behavior: contain; }
+.plan-modal::backdrop { background: rgba(17, 17, 17, 0.6); }
+.plan-modal__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 26px 26px 0; }
+.plan-modal__heading h2 { font-size: 28px; }
+.plan-modal__close { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--ink); background: var(--white); font-size: 14px; cursor: pointer; }
+.plan-modal__close:hover { background: var(--ink); color: var(--white); }
+.plan-modal__lede { margin: 8px 26px 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.plan-modal .plan-form { max-width: none; padding: 18px 26px 26px; }
+@media (max-width: 640px) { .plan-modal__heading { padding: 20px 18px 0; } .plan-modal__lede { margin: 8px 18px 0; } .plan-modal .plan-form { padding: 14px 18px 20px; } .plan-modal .plan-form__section { padding: 20px 16px; } }
 .plan-form__section { display: grid; gap: 28px; padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
 .plan-form__section-heading { display: flex; align-items: flex-start; gap: 14px; }
 .plan-form__section-heading > span { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; border: 1px solid currentColor; border-radius: 50%; color: var(--muted); font-size: 10px; font-weight: 700; }

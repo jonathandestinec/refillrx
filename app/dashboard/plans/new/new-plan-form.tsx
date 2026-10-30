@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import { saveRefillPlanDraft, type PlanDraftState } from "@/app/actions/refill-plan";
 import { MONTHLY_PLAN_PAYMENT_LABEL } from "@/lib/payments";
@@ -24,8 +24,15 @@ function getDefaultDate() {
   return date.toISOString().slice(0, 10);
 }
 
-export default function NewPlanForm({ medicines }: { medicines: MedicineOption[] }) {
+export default function NewPlanForm({ medicines, onSuccess }: { medicines: MedicineOption[]; onSuccess?: () => void }) {
   const [state, action, pending] = useActionState(saveRefillPlanDraft, initialState);
+
+  // In the dashboard modal a saved draft means the next step is payment on the
+  // dashboard itself, so the modal hands control back to its owner. The
+  // standalone page keeps the saved message instead.
+  useEffect(() => {
+    if (state?.success && onSuccess) onSuccess();
+  }, [state, onSuccess]);
 
   return (
     <form className="plan-form" action={action}>

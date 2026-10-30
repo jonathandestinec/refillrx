@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getPharmacistId, logNotification, notifyUser } from "@/lib/push-server";
 import { addDaysToDate, scheduleRefillReminder } from "@/lib/refill-reminders";
 
-export type RefillOrderState = { message?: string; success?: boolean } | null;
+export type RefillOrderState = { message?: string; success?: boolean; order?: { status: string; private_price_amount: number | null; private_price_currency: string } | null } | null;
 export type MessageState = { message?: string; success?: boolean; sentMessage?: { id: string; sender_id: string; body: string; created_at: string } } | null;
 
 function text(formData: FormData, key: string) {
@@ -93,13 +93,14 @@ export async function requestRefill(
     });
   }
 
-  return { message: "Refill request sent to Mani.", success: true };
+  // Return the created order so the client can show "Request sent" without
+  // waiting for a realtime event.
+  return { message: "Refill request sent to Mani.", success: true, order: { status: "requested", private_price_amount: null, private_price_currency: "NGN" } };
 }
 
 const allowedStatuses = ["requested", "reviewing", "ready", "completed", "cancelled"] as const;
 type RefillOrderStatus = (typeof allowedStatuses)[number];
-export type OrderStatusState = { message?: string; success?: boolean } | null;
-
+export type OrderStatusState = { message?: string; success?: boolean; order?: { status: string; availability_confirmed: boolean; private_price_amount: number | null } | null } | null;
 // A refill order may only move forward through this chain (or be cancelled
 // while it is still open). This keeps patients from tricks like re-opening a
 // completed order and forces availability confirmation before pickup.
@@ -165,7 +166,6 @@ export async function updateRefillOrderStatus(
   const updates: Record<string, string> = { status: nextStatus, updated_at: new Date().toISOString() };
   if (nextStatus === "ready") updates.ready_at = new Date().toISOString();
   if (nextStatus === "completed") updates.completed_at = new Date().toISOString();
-
   const { error } = await supabase.from("refill_orders").update(updates).eq("id", orderId);
   if (error) {
     console.error("Refill order status update failed", { code: error.code, message: error.message, details: error.details, hint: error.hint });
@@ -221,7 +221,15 @@ export async function updateRefillOrderStatus(
       }
     }
   }
-  return { message: nextStatus === "completed" ? "Refill marked completed." : "Order status updated.", success: true };
+  return {
+    message: nextStatus === "completed" ? "Refill marked completed." : "Order status updated.",
+    success: true,
+    order: {
+      status: nextStatus,
+      availability_confirmed: existingOrder.availability_confirmed,
+      private_price_amount: existingOrder.private_price_amount,
+    },
+  };
 }
 
 export async function reviewRefillOrder(
@@ -306,9 +314,18 @@ export async function reviewRefillOrder(
     });
   }
 
-  return availability === "confirmed"
-    ? { message: "Availability saved. Mark the order ready when it is packed.", success: true }
-    : { message: "Request cancelled because the medicine is unavailable.", success: true };
+  const reviewedStatus = Boolean(updates.status) ? (updates.status as string) : order.status;
+  return {
+    message: availability === "confirmed"
+      ? "Availability saved. Mark the order ready when it is packed."
+      : "Request cancelled because the medicine is unavailable.",
+    success: true,
+    order: {
+      status: reviewedStatus,
+      availability_confirmed: availability === "confirmed",
+      private_price_amount: availability === "confirmed" ? price : null,
+    },
+  };
 }
 
 export async function sendOrderMessage(

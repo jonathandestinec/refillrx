@@ -25,6 +25,29 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
   });
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
+  // The pharmacist's own actions are the fastest truth: reflect the returned
+  // order state immediately; realtime covers the patient-side view.
+  useEffect(() => {
+    if (reviewState?.success && reviewState.order) {
+      setLiveOrder((current) => ({
+        status: reviewState.order!.status,
+        availabilityConfirmed: reviewState.order!.availability_confirmed,
+        privatePriceAmount: reviewState.order!.private_price_amount,
+        reviewedAt: current.reviewedAt ?? new Date().toISOString(),
+      }));
+    }
+  }, [reviewState]);
+  useEffect(() => {
+    if (statusState?.success && statusState.order) {
+      setLiveOrder((current) => ({
+        status: statusState.order!.status,
+        availabilityConfirmed: current.availabilityConfirmed,
+        privatePriceAmount: current.privatePriceAmount,
+        reviewedAt: current.reviewedAt,
+      }));
+    }
+  }, [statusState]);
+
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase

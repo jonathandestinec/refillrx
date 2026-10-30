@@ -131,7 +131,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="patient-preview" aria-label="Example RefillRx patient dashboard">
+          <div className="patient-preview" role="img" aria-label="Example RefillRx patient dashboard">
             <div className="patient-preview__topbar">
               <span className="patient-preview__mini-brand"><MedicineMark /> refill<span>rx</span></span>
               <span className="patient-preview__notification">2</span>

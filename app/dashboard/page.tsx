@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 
@@ -10,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 
 import PaymentCheckout from "./payment-checkout";
 import RequestRefill from "./request-refill";
+import NewPlanModal from "./plan-modal";
+import type { MedicineOption } from "./plans/new/new-plan-form";
 
 const openStatuses = ["requested", "reviewing", "ready"];
 
@@ -113,6 +114,15 @@ export default async function DashboardPage() {
     (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
   );
 
+  // Medicines are needed by the dashboard registration modal.
+  const { data: medicines } = await supabase
+    .from("medicines")
+    .select("id, name, brand, strength, dosage_form, pack_size, category, requires_prescription")
+    .eq("active", true)
+    .order("category")
+    .order("name");
+  const medicineOptions: MedicineOption[] = medicines ?? [];
+
   return (
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
@@ -180,7 +190,7 @@ export default async function DashboardPage() {
             <p className="eyebrow">No active plan</p>
             <strong>Register a medicine to begin.</strong>
             <span>Add the medicine and date you want Mani to prepare for your next refill.</span>
-            <Link className="button button--dark" href="/dashboard/plans/new">Register a refill plan <span aria-hidden="true">↗</span></Link>
+            <NewPlanModal medicines={medicineOptions} />
           </div>
         )}
         <section className="account-history" id="history" aria-labelledby="history-title">
@@ -189,7 +199,9 @@ export default async function DashboardPage() {
                 <p className="eyebrow">Previous refills</p>
                 <h2 id="history-title">Your refill history</h2>
               </div>
-              <span>Last {safeHistoryOrders.length} {safeHistoryOrders.length === 1 ? "order" : "orders"}</span>
+              {safeHistoryOrders.length > 0 && (
+                <span>Last {safeHistoryOrders.length} {safeHistoryOrders.length === 1 ? "order" : "orders"}</span>
+              )}
             </div>
             {safeHistoryOrders.length ? <div className="account-history__list">
               {safeHistoryOrders.map((order) => {

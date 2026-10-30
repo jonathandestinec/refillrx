@@ -101,6 +101,12 @@ drop policy if exists "profiles_insert_self_as_patient" on public.profiles;
 create policy "profiles_insert_self_as_patient" on public.profiles for insert
   with check (auth.uid() = id and role = 'patient');
 
+-- The pharmacist workspace must display patient details (queue, messages,
+-- history). Patients remain limited to their own profile.
+drop policy if exists "profiles_pharmacist_read" on public.profiles;
+create policy "profiles_pharmacist_read" on public.profiles for select
+  using (is_pharmacist());
+
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles for update
   using (auth.uid() = id) with check (auth.uid() = id and role = 'patient');

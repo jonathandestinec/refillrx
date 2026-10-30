@@ -62,7 +62,7 @@ export default function UseCaseDeck() {
 
   return (
     <div className="deck-wrap">
-      <div className="deck" role="list" aria-label="RefillRx product moments">
+      <div className="deck">
         {useCases.map((card, index) => {
           const offset = index - focusedIndex;
           const isFocused = offset === 0;
@@ -83,7 +83,6 @@ export default function UseCaseDeck() {
               }}
               type="button"
               aria-expanded={isFlipped}
-              aria-label={`${card.label}: ${card.title}. ${isFlipped ? "Showing details. Activate to show artwork." : isFocused ? "Focused. Activate to reveal details." : "Activate to bring this card forward."}`}
             >
               <span className="use-case-card__inner">
                 <span className="use-case-card__face use-case-card__front">
@@ -110,14 +109,14 @@ export default function UseCaseDeck() {
           );
         })}
       </div>
-      <div className="deck-controls" aria-label="Choose a product moment">
+      <div className="deck-controls" role="group" aria-label="Choose a product moment">
         {useCases.map((card, index) => (
           <button
             className={`deck-dot ${index === focusedIndex ? "is-active" : ""}`}
             key={card.label}
             onClick={() => focusCard(index)}
             type="button"
-            aria-label={`Bring ${card.label} moment forward`}
+            aria-label={`Bring ${card.label} moment forward: ${card.title}`}
             aria-current={index === focusedIndex ? "true" : undefined}
           />
         ))}

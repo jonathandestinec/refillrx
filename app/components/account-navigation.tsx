@@ -11,6 +11,7 @@ const navigation = {
   patient: [
     { href: "/dashboard", label: "Overview" },
     { href: "/dashboard/plans/new", label: "New refill plan" },
+    { href: "/dashboard/notifications", label: "Notifications" },
     { href: "/dashboard/messages", label: "Messages" },
     { href: "/dashboard#history", label: "Refill history" },
   ],
