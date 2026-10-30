@@ -43,20 +43,36 @@ export default async function NotificationsPage() {
     supabase.from("notifications").select("id").eq("patient_id", patientId).is("read_at", null),
   ]);
 
+  const { data: openOrders } = await supabase
+    .from("refill_orders")
+    .select("id")
+    .eq("patient_id", patientId)
+    .in("status", ["requested", "reviewing", "ready"]);
+  const orderIds = (openOrders ?? []).map((order) => order.id);
+  const { data: unreadMessageRows } = orderIds.length
+    ? await supabase
+        .from("refill_order_messages")
+        .select("id")
+        .in("order_id", orderIds)
+        .neq("sender_id", patientId)
+        .is("read_at", null)
+    : { data: [] as { id: string }[] };
+
   const unreadCount = unreadRows?.length ?? 0;
+  const unreadMessages = unreadMessageRows?.length ?? 0;
   const rows = notifications ?? [];
 
   return (
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" userId={patientId} unreadMessages={0} unreadNotifications={unreadCount} />
+        <AccountNavigation role="patient" userId={patientId} unreadMessages={unreadMessages} unreadNotifications={unreadCount} />
         <LiveRefresh userId={patientId} channelName="refillrx-patient-notifications" />
         <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
           <div className="account-intro">
             <p className="eyebrow">Notifications</p>
             <h1>Your RefillRx updates.</h1>
-            <p className="account-lede">Every reminder and order update RefillRx sends you, as delivered. Browser notifications are the faster channel; this feed keeps a record either way.</p>
+            <p className="account-lede">Recent refill reminders and order updates appear here with their delivery status. Browser reminders are optional.</p>
           </div>
           <section className="account-history" aria-labelledby="notifications-title">
             <div className="account-history__heading">

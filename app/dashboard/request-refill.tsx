@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { requestRefill, type RefillOrderState } from "@/app/actions/refill-orders";
@@ -19,7 +20,11 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
   // submit; realtime keeps the view in sync with pharmacist-side updates.
   useEffect(() => {
     if (state?.success) {
-      if (state.order) setLiveOrder({ status: state.order.status, price: state.order.private_price_amount, currency: state.order.private_price_currency, updatedAt: ("updated_at" in state.order ? (state.order as { updated_at?: string }).updated_at : undefined) ?? new Date().toISOString() });
+      if (state.order) {
+        startTransition(() => {
+          setLiveOrder({ status: state.order!.status, price: state.order!.private_price_amount, currency: state.order!.private_price_currency, updatedAt: state.order!.updated_at ?? new Date().toISOString() });
+        });
+      }
       else router.refresh();
     }
   }, [state, router]);
@@ -48,6 +53,7 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
               updatedAt: order.updated_at ?? current.updatedAt,
             };
           });
+          router.refresh();
         },
       )
       .subscribe((subscriptionStatus) => {
@@ -58,7 +64,7 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [planId]);
+  }, [planId, router]);
 
   if (liveOrder.status) {
     const label = liveOrder.status === "ready" ? "Ready for pickup" : liveOrder.status === "reviewing" ? "Being reviewed" : liveOrder.status === "completed" ? "Completed" : liveOrder.status === "cancelled" ? "Cancelled" : "Request sent";
@@ -73,7 +79,14 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
             : liveOrder.status === "cancelled"
               ? "This refill request was cancelled."
               : "Mani has received your request and will review it privately.";
-    return <p className="refill-request-status" role="status"><strong>{label}</strong><span>{message}</span><small className={`refill-request-status__live refill-request-status__live--${liveState}`}>{liveState === "connected" ? "Updates appear automatically." : liveState === "error" ? "Refresh to check for updates." : "Connecting to live updates…"}</small></p>;
+    return (
+      <div className="refill-request-status" role="status">
+        <strong>{label}</strong>
+        <span>{message}</span>
+        <small className={`refill-request-status__live refill-request-status__live--${liveState}`}>{liveState === "connected" ? "Updates appear automatically." : liveState === "error" ? "Refresh to check for updates." : "Connecting to live updates…"}</small>
+        <Link className="refill-request-status__link" href={`/dashboard/messages#conversation-${planId}`}>Open conversation</Link>
+      </div>
+    );
   }
 
   return (

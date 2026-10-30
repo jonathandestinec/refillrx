@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { markOrderMessagesRead, sendOrderMessage, type MessageState } from "@/app/actions/refill-orders";
 import { formatDateTime } from "@/lib/date-format";
@@ -11,16 +11,28 @@ type OrderMessage = { id: string; sender_id: string; body: string; created_at: s
 
 export default function OrderChat({ orderId, viewerId, participantLabel, messages }: { orderId: string; viewerId: string; participantLabel: string; messages: OrderMessage[] }) {
   const [state, action, pending] = useActionState(sendOrderMessage, null as MessageState);
-  const [liveMessages, setLiveMessages] = useState(messages);
+  const [liveMessages, setLiveMessages] = useState<OrderMessage[]>([]);
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Opening the conversation (and any message that arrives while it is open)
-  // marks the other party's messages as read.
+  const displayedMessages = useMemo(() => {
+    const merged = new Map(messages.map((message) => [message.id, message]));
+    for (const message of liveMessages) merged.set(message.id, message);
+    if (state?.sentMessage) merged.set(state.sentMessage.id, state.sentMessage);
+    return [...merged.values()].sort((first, second) => first.created_at.localeCompare(second.created_at));
+  }, [messages, liveMessages, state]);
+
   useEffect(() => {
     const formData = new FormData();
     formData.set("order_id", orderId);
     void markOrderMessagesRead(formData);
-  }, [orderId, liveMessages, state]);
+  }, [orderId, displayedMessages.length]);
+
+  useEffect(() => {
+    const messageList = messageListRef.current;
+    if (messageList) messageList.scrollTop = messageList.scrollHeight;
+  }, [displayedMessages.length]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -46,14 +58,9 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
     };
   }, [orderId]);
 
-  const displayedMessages = state?.sentMessage && !liveMessages.some((item) => item.id === state.sentMessage?.id)
-    ? [...liveMessages, state.sentMessage]
-    : liveMessages;
-
   useEffect(() => {
     if (!state?.success) return;
-    const form = document.getElementById(`message-${orderId}`) as HTMLTextAreaElement | null;
-    if (form) form.value = "";
+    if (messageInputRef.current) messageInputRef.current.value = "";
   }, [orderId, state]);
 
   return (
@@ -63,10 +70,10 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
           <p className="eyebrow">Conversation</p>
           <h3 id={`chat-${orderId}`}>Message about this refill</h3>
         </div>
-        <span>{liveState === "connected" ? "Private · live" : "Private"}</span>
+        <span aria-live="polite">{liveState === "connected" ? "Private · live" : liveState === "error" ? "Private · live updates unavailable" : "Private · connecting"}</span>
       </div>
       {displayedMessages.length ? (
-        <div className="order-chat__messages">
+        <div className="order-chat__messages" aria-live="polite" ref={messageListRef}>
           {displayedMessages.map((message) => {
             const mine = message.sender_id === viewerId;
             return (
@@ -83,10 +90,10 @@ export default function OrderChat({ orderId, viewerId, participantLabel, message
       <form className="order-chat__form" action={action}>
         <input type="hidden" name="order_id" value={orderId} />
         <label className="sr-only" htmlFor={`message-${orderId}`}>Message</label>
-        <textarea id={`message-${orderId}`} name="body" maxLength={1000} placeholder="Write a message about this refill" rows={2} required />
+        <textarea id={`message-${orderId}`} name="body" maxLength={1000} placeholder="Write a message about this refill" rows={2} ref={messageInputRef} required />
         <button className="button button--dark" type="submit" disabled={pending}>{pending ? "Sending…" : "Send message"}</button>
       </form>
-      {state?.message && <p className="order-chat__feedback" role="status">{state.message}</p>}
+      {state?.message && <p className={state.success ? "order-chat__feedback" : "auth-error"} role="status">{state.message}</p>}
     </section>
   );
 }

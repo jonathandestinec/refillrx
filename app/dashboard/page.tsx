@@ -32,34 +32,34 @@ export default async function DashboardPage() {
 
   if (profile?.role === "pharmacist") redirect("/pharmacy");
 
-  const { data: activePlan } = await supabase
+  const { data: activePlansData } = await supabase
     .from("refill_plans")
     .select("id, medicine_id, frequency_days, next_refill_date, status")
     .eq("patient_id", claims.sub)
     .eq("status", "active")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const { data: activeMedicine } = activePlan
-    ? await supabase
-        .from("medicines")
-        .select("name, brand, strength, dosage_form")
-        .eq("id", activePlan.medicine_id)
-        .maybeSingle()
-    : { data: null };
-
-  const { data: activeOrder } = activePlan
-    ? await supabase
-        .from("refill_orders")
-        .select("id, status, availability_confirmed, private_price_amount, private_price_currency")
-        .eq("plan_id", activePlan.id)
-        .eq("patient_id", claims.sub)
-        .in("status", ["requested", "reviewing", "ready"])
-        .order("requested_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    : { data: null };
+    .order("updated_at", { ascending: false });
+  const activePlans = activePlansData ?? [];
+  const activePlanIds = activePlans.map((plan) => plan.id);
+  const activeMedicineIds = [...new Set(activePlans.map((plan) => plan.medicine_id))];
+  const [{ data: activeMedicines }, { data: activeOrders }] = await Promise.all([
+    activeMedicineIds.length
+      ? supabase.from("medicines").select("id, name, brand, strength, dosage_form").in("id", activeMedicineIds)
+      : Promise.resolve({ data: [] }),
+    activePlanIds.length
+      ? supabase
+          .from("refill_orders")
+          .select("id, plan_id, status, availability_confirmed, private_price_amount, private_price_currency")
+          .eq("patient_id", claims.sub)
+          .in("plan_id", activePlanIds)
+          .in("status", openStatuses)
+          .order("requested_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
+  ]);
+  const activeMedicineById = new Map((activeMedicines ?? []).map((medicine) => [medicine.id, medicine]));
+  const activeOrderByPlan = new Map<string, NonNullable<typeof activeOrders>[number]>();
+  for (const order of activeOrders ?? []) {
+    if (order.plan_id && !activeOrderByPlan.has(order.plan_id)) activeOrderByPlan.set(order.plan_id, order);
+  }
 
   const { data: draft } = await supabase
     .from("refill_plan_drafts")
@@ -103,11 +103,15 @@ export default async function DashboardPage() {
   const safeHistoryOrders = historyOrders ?? [];
 
   // Unread chat messages belong to the patient's open refill conversations.
-  const { data: openOrderIds } = await supabase.from("refill_orders").select("id").eq("patient_id", claims.sub).in("status", openStatuses);
+  const [{ data: openOrderIds }, { data: unreadNotificationRows }] = await Promise.all([
+    supabase.from("refill_orders").select("id").eq("patient_id", claims.sub).in("status", openStatuses),
+    supabase.from("notifications").select("id").eq("patient_id", claims.sub).is("read_at", null),
+  ]);
   const unreadRows = openOrderIds?.length
     ? await supabase.from("refill_order_messages").select("id").in("order_id", openOrderIds.map(order => order.id)).neq("sender_id", claims.sub).is("read_at", null)
     : { data: [] as { id: string }[] };
   const unreadMessages = unreadRows?.data?.length ?? 0;
+  const unreadNotifications = unreadNotificationRows?.length ?? 0;
 
   const paymentConfigured = Boolean(
     process.env.PAYSTACK_SECRET_KEY &&
@@ -127,42 +131,52 @@ export default async function DashboardPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" userId={claims.sub} unreadMessages={unreadMessages} />
+        <AccountNavigation role="patient" userId={claims.sub} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} />
         <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
         <div className="account-intro">
           <p className="eyebrow">Refill plan</p>
-          <h1>Your next refill.</h1>
-          <p className="account-lede">{profile?.full_name ? `Welcome, ${profile.full_name}.` : "Your refill plan and messages appear here."} Mani confirms availability and medicine pricing privately.</p>
+          <h1>Your refill plans.</h1>
+          <p className="account-lede">{profile?.full_name ? `Welcome, ${profile.full_name}.` : "Your refill plans and messages appear here."} Mani confirms availability and medicine pricing privately.</p>
         </div>
         <PushNotificationOptIn />
-        {activePlan ? (
-          <section className="account-plan-card" aria-labelledby="active-plan-title">
-            <div className="account-plan-card__header">
-              <div>
-                <p className="eyebrow">Active plan</p>
-                <h2 id="active-plan-title">
-                  {activeMedicine?.name ?? "Medicine plan"}
-                  {activeMedicine?.strength ? ` ${activeMedicine.strength}` : ""}
-                </h2>
-                {activeMedicine?.brand && <span>{activeMedicine.brand} · {activeMedicine.dosage_form ?? "Medicine"}</span>}
-              </div>
-              <span className="status-pill status-pill--lime">Plan active</span>
-            </div>
-            <div className="account-plan-card__details">
-              <div><small>Next refill</small><strong>{formatDate(activePlan.next_refill_date)}</strong></div>
-              <div><small>Refill frequency</small><strong>Every {activePlan.frequency_days} days</strong></div>
-              <div><small>Pharmacy</small><strong>Mani, Benin City</strong></div>
-            </div>
-            <div className="account-action-panel">
-              <div>
-                <p className="eyebrow">Next action</p>
-                <h3>{activeOrder ? "Your refill request" : "Request your next refill"}</h3>
-                <p>{activeOrder ? "Mani is handling this request. Use the private conversation below for availability or pickup questions." : "Send the request when you want Mani to check availability for your next refill."}</p>
-              </div>
-              <RequestRefill planId={activePlan.id} status={activeOrder?.status} price={activeOrder?.private_price_amount} currency={activeOrder?.private_price_currency} />
-            </div>
-          </section>
-        ) : draft ? (
+        {activePlans.length > 0 && (
+          <div className="account-plan-list" aria-label="Active refill plans">
+            {activePlans.map((plan) => {
+              const medicine = activeMedicineById.get(plan.medicine_id);
+              const activeOrder = activeOrderByPlan.get(plan.id);
+              const titleId = `active-plan-title-${plan.id}`;
+              return (
+                <section className="account-plan-card" aria-labelledby={titleId} key={plan.id}>
+                  <div className="account-plan-card__header">
+                    <div>
+                      <p className="eyebrow">Active plan</p>
+                      <h2 id={titleId}>
+                        {medicine?.name ?? "Medicine plan"}
+                        {medicine?.strength ? ` ${medicine.strength}` : ""}
+                      </h2>
+                      {medicine?.brand && <span>{medicine.brand} · {medicine.dosage_form ?? "Medicine"}</span>}
+                    </div>
+                    <span className="status-pill status-pill--lime">Plan active</span>
+                  </div>
+                  <div className="account-plan-card__details">
+                    <div><small>Next refill</small><strong>{formatDate(plan.next_refill_date)}</strong></div>
+                    <div><small>Refill frequency</small><strong>Every {plan.frequency_days} days</strong></div>
+                    <div><small>Pharmacy</small><strong>Mani, Benin City</strong></div>
+                  </div>
+                  <div className="account-action-panel">
+                    <div>
+                      <p className="eyebrow">Next action</p>
+                      <h3>{activeOrder ? "Your refill request" : "Request your next refill"}</h3>
+                      <p>{activeOrder ? "Mani is handling this request. Use the private conversation for availability or pickup questions." : "Send the request when you want Mani to check availability for your next refill."}</p>
+                    </div>
+                    <RequestRefill planId={plan.id} status={activeOrder?.status} price={activeOrder?.private_price_amount} currency={activeOrder?.private_price_currency} />
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+        {draft ? (
           <section className="account-plan-card" aria-labelledby="draft-title">
             <div className="account-plan-card__header">
               <div>
@@ -185,14 +199,14 @@ export default async function DashboardPage() {
             <p className="account-plan-card__note">Your medicine and refill date are saved. Pay {MONTHLY_PLAN_PAYMENT_LABEL} to activate the plan; Mani confirms availability and medicine pricing privately.</p>
             <PaymentCheckout configured={paymentConfigured} failedBefore={draftPayment?.status === "failed"} />
           </section>
-        ) : (
+        ) : activePlans.length === 0 ? (
           <div className="account-empty-state">
             <p className="eyebrow">No active plan</p>
             <strong>Register a medicine to begin.</strong>
             <span>Add the medicine and date you want Mani to prepare for your next refill.</span>
             <NewPlanModal medicines={medicineOptions} />
           </div>
-        )}
+        ) : null}
         <section className="account-history" id="history" aria-labelledby="history-title">
             <div className="account-history__heading">
               <div>
@@ -213,7 +227,7 @@ export default async function DashboardPage() {
                       <strong>{medicine?.name ?? "Medicine unavailable"}{medicine?.strength ? ` ${medicine.strength}` : ""}</strong>
                       <span>Requested {formatDate(order.requested_at)}</span>
                     </div>
-                    <span className={`status-pill ${completed ? "status-pill--lime" : "status-pill--grey"}`}>{completed ? "Completed" : "Cancelled"}</span>
+                    <span className={`status-pill ${completed ? "status-pill--lime" : "status-pill--grey"}`}>{completed ? "Collected" : "Cancelled"}</span>
                   </div>
                 );
               })}

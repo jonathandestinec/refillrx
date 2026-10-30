@@ -21,57 +21,79 @@ export default function PaymentCheckout({ configured, failedBefore = false }: { 
   const [scriptReady, setScriptReady] = useState(false);
   const [state, setState] = useState<CheckoutState>(failedBefore ? "error" : "idle");
   const [message, setMessage] = useState(failedBefore ? "The previous payment did not complete. You can try again." : "");
+  const [paymentReference, setPaymentReference] = useState<string | null>(null);
 
   async function verify(reference: string, attempts = 0): Promise<void> {
     setState("verifying");
-    const response = await fetch("/api/payments/paystack/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference }),
-    });
-    const result = (await response.json().catch(() => null)) as { status?: string; message?: string } | null;
+    try {
+      const response = await fetch("/api/payments/paystack/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference }),
+      });
+      const result = (await response.json().catch(() => null)) as { status?: string; message?: string } | null;
 
-    if (response.ok && result?.status === "succeeded") {
-      setState("success");
-      setMessage("Payment confirmed. Your refill plan is now active.");
-      router.replace("/dashboard");
-      return;
+      if (response.ok && result?.status === "succeeded") {
+        setState("success");
+        setMessage("Payment confirmed. Your refill plan is now active.");
+        router.replace("/dashboard");
+        return;
+      }
+
+      if ((response.status === 202 || result?.status === "pending") && attempts < 24) {
+        window.setTimeout(() => void verify(reference, attempts + 1), 2500);
+        return;
+      }
+
+      setState("error");
+      setMessage(
+        response.status === 202 || result?.status === "pending"
+          ? "Payment is still processing. Check its status again before starting another payment."
+          : result?.message ?? "We could not confirm the payment. Check its status before trying again.",
+      );
+    } catch {
+      setState("error");
+      setMessage("We could not check the payment status. Check again before starting another payment.");
     }
-
-    if (response.status === 202 && attempts < 24) {
-      window.setTimeout(() => void verify(reference, attempts + 1), 2500);
-      return;
-    }
-
-    setState(result?.status === "pending" ? "verifying" : "error");
-    setMessage(result?.message ?? "We could not confirm the payment yet. You can try again without being charged twice.");
   }
 
   async function startPayment() {
+    if (paymentReference) {
+      await verify(paymentReference);
+      return;
+    }
+
     setState("initializing");
     setMessage("");
-    const response = await fetch("/api/payments/paystack/initialize", { method: "POST" });
-    const result = (await response.json().catch(() => null)) as { accessCode?: string; authorizationUrl?: string; reference?: string; message?: string } | null;
+    try {
+      const response = await fetch("/api/payments/paystack/initialize", { method: "POST" });
+      const result = (await response.json().catch(() => null)) as { accessCode?: string; authorizationUrl?: string; reference?: string; message?: string } | null;
 
-    if (!response.ok || !result?.accessCode || !result.reference) {
-      setState("error");
-      setMessage(result?.message ?? "We could not start payment. Please try again.");
-      return;
-    }
-
-    if (!scriptReady || !window.PaystackPop) {
-      if (result.authorizationUrl) window.location.assign(result.authorizationUrl);
-      else {
+      if (!response.ok || !result?.accessCode || !result.reference) {
         setState("error");
-        setMessage("Checkout is still loading. Please try again.");
+        setMessage(result?.message ?? "We could not start payment. Please try again.");
+        return;
       }
-      return;
-    }
+      setPaymentReference(result.reference);
 
-    setState("checkout");
-    const popup = new window.PaystackPop();
-    popup.resumeTransaction(result.accessCode);
-    window.setTimeout(() => void verify(result.reference!), 4000);
+      if (!scriptReady || !window.PaystackPop) {
+        if (result.authorizationUrl) window.location.assign(result.authorizationUrl);
+        else {
+          setState("error");
+          setMessage("Checkout is still loading. Please try again.");
+        }
+        return;
+      }
+
+      setState("checkout");
+      const popup = new window.PaystackPop();
+      popup.resumeTransaction(result.accessCode);
+      const reference = result.reference;
+      window.setTimeout(() => void verify(reference), 4000);
+    } catch {
+      setState("error");
+      setMessage("We could not start checkout. Please try again.");
+    }
   }
 
   const busy = state === "initializing" || state === "checkout" || state === "verifying";
@@ -81,7 +103,7 @@ export default function PaymentCheckout({ configured, failedBefore = false }: { 
       {configured && <Script src="https://js.paystack.co/v2/inline.js" strategy="afterInteractive" onReady={() => setScriptReady(true)} />}
       {configured ? (
         <button className="button button--dark" type="button" onClick={() => void startPayment()} disabled={busy}>
-          {state === "initializing" ? "Preparing payment…" : state === "checkout" ? "Checkout open…" : state === "verifying" ? "Confirming payment…" : `Pay ${MONTHLY_PLAN_PAYMENT_LABEL} and activate plan`}
+          {state === "initializing" ? "Preparing payment…" : state === "checkout" ? "Checkout open…" : state === "verifying" ? "Confirming payment…" : paymentReference ? "Check payment status" : `Pay ${MONTHLY_PLAN_PAYMENT_LABEL} and activate plan`}
           <span aria-hidden="true">↗</span>
         </button>
       ) : null}

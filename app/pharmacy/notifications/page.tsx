@@ -43,14 +43,29 @@ export default async function PharmacyNotificationsPage() {
     supabase.from("notifications").select("id").eq("patient_id", pharmacistId).is("read_at", null),
   ]);
 
+  const { data: openOrders } = await supabase
+    .from("refill_orders")
+    .select("id")
+    .in("status", ["requested", "reviewing", "ready"]);
+  const orderIds = (openOrders ?? []).map((order) => order.id);
+  const { data: unreadMessageRows } = orderIds.length
+    ? await supabase
+        .from("refill_order_messages")
+        .select("id")
+        .in("order_id", orderIds)
+        .neq("sender_id", pharmacistId)
+        .is("read_at", null)
+    : { data: [] as { id: string }[] };
+
   const unreadCount = unreadRows?.length ?? 0;
+  const unreadMessages = unreadMessageRows?.length ?? 0;
   const rows = notifications ?? [];
 
   return (
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="pharmacist" userId={pharmacistId} unreadNotifications={unreadCount} />
+        <AccountNavigation role="pharmacist" userId={pharmacistId} unreadMessages={unreadMessages} unreadNotifications={unreadCount} />
         <LiveRefresh userId={pharmacistId} channelName="refillrx-pharmacy-notifications" />
         <section className="account-content account-content--pharmacist" id="account-main" tabIndex={-1}>
           <div className="account-intro">

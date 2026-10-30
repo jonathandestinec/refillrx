@@ -1,4 +1,8 @@
-const CACHE_NAME = "refillrx-shell-v2";
+const CACHE_NAME = "refillrx-shell-v3";
+const IS_DEVELOPMENT =
+  new URL(self.location.href).searchParams.has("dev") ||
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "127.0.0.1";
 // Pages and assets that make sense with no connection at all.
 const APP_SHELL = ["/", "/offline", "/manifest.webmanifest", "/icons/refillrx.svg"];
 
@@ -44,6 +48,11 @@ self.addEventListener("fetch", (event) => {
   const isAccountArea = url.pathname.startsWith("/dashboard") || url.pathname.startsWith("/pharmacy");
 
   if (isStaticAsset) {
+    if (IS_DEVELOPMENT) {
+      event.respondWith(fetch(request));
+      return;
+    }
+
     event.respondWith(
       caches.match(request).then((cached) =>
         cached || fetch(request).then((response) => {

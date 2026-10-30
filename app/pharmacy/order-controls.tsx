@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 
 import { reviewRefillOrder, updateRefillOrderStatus, type OrderStatusState } from "@/app/actions/refill-orders";
 import { useActionState } from "react";
@@ -29,24 +29,28 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
   // order state immediately; realtime covers the patient-side view.
   useEffect(() => {
     if (reviewState?.success && reviewState.order) {
-      setLiveOrder((current) => ({
-        status: reviewState.order!.status,
-        availabilityConfirmed: reviewState.order!.availability_confirmed,
-        privatePriceAmount: reviewState.order!.private_price_amount,
-        reviewedAt: current.reviewedAt ?? new Date().toISOString(),
-        updatedAt: reviewState.order!.updated_at ?? current.updatedAt,
-      }));
+      startTransition(() => {
+        setLiveOrder((current) => ({
+          status: reviewState.order!.status,
+          availabilityConfirmed: reviewState.order!.availability_confirmed,
+          privatePriceAmount: reviewState.order!.private_price_amount,
+          reviewedAt: current.reviewedAt ?? new Date().toISOString(),
+          updatedAt: reviewState.order!.updated_at ?? current.updatedAt,
+        }));
+      });
     }
   }, [reviewState]);
   useEffect(() => {
     if (statusState?.success && statusState.order) {
-      setLiveOrder((current) => ({
-        status: statusState.order!.status,
-        availabilityConfirmed: current.availabilityConfirmed,
-        privatePriceAmount: current.privatePriceAmount,
-        reviewedAt: current.reviewedAt,
-        updatedAt: statusState.order!.updated_at ?? current.updatedAt,
-      }));
+      startTransition(() => {
+        setLiveOrder((current) => ({
+          status: statusState.order!.status,
+          availabilityConfirmed: current.availabilityConfirmed,
+          privatePriceAmount: current.privatePriceAmount,
+          reviewedAt: current.reviewedAt,
+          updatedAt: statusState.order!.updated_at ?? current.updatedAt,
+        }));
+      });
     }
   }, [statusState]);
 
@@ -85,7 +89,7 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
   }, [orderId, status]);
 
   const nextStatus = liveOrder.status === "requested" ? "reviewing" : liveOrder.status === "reviewing" ? "ready" : "completed";
-  const nextLabel = liveOrder.status === "requested" ? "Start review" : liveOrder.status === "reviewing" ? "Mark ready for pickup" : "Mark completed";
+  const nextLabel = liveOrder.status === "requested" ? "Start review" : liveOrder.status === "reviewing" ? "Mark ready for pickup" : "Mark collected";
   const statusLabel = liveOrder.status === "ready" ? "Ready for pickup" : liveOrder.status === "reviewing" ? "In review" : "Requested";
   const reviewComplete = Boolean(liveOrder.reviewedAt && liveOrder.availabilityConfirmed && liveOrder.privatePriceAmount !== null);
 
@@ -95,7 +99,7 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         <span className={`status-pill ${liveOrder.status === "ready" ? "status-pill--lime" : "status-pill--yellow"}`}>{statusLabel}</span>
         <small className={`pharmacy-order-status__live pharmacy-order-status__live--${liveState}`}>{liveState === "connected" ? "Live" : liveState === "error" ? "Refresh needed" : "Connecting…"}</small>
       </div>
-      <form className="pharmacy-review" action={reviewAction}>
+      {["requested", "reviewing"].includes(liveOrder.status) && <form className="pharmacy-review" action={reviewAction}>
         <div className="pharmacy-review__heading">
           <p className="eyebrow">Pharmacist review</p>
           <p>Confirm availability and the private medicine price before marking this request ready.</p>
@@ -133,11 +137,11 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
           {reviewPending ? "Saving review…" : "Save private review"}
         </button>
         {reviewState?.message && <p className={reviewState.success ? "order-chat__feedback" : "auth-error"} role="status">{reviewState.message}</p>}
-      </form>
+      </form>}
       <form className="pharmacy-queue__actions" action={statusAction}>
         <input type="hidden" name="order_id" value={orderId} />
         {nextStatus === "ready" && !reviewComplete ? <button className="button button--dark" disabled type="button">Save review before pickup</button> : <button className="button button--dark" name="status" value={nextStatus} type="submit" disabled={statusPending}>{statusPending ? "Saving…" : nextLabel} {!statusPending && <span aria-hidden="true">↗</span>}</button>}
-        {liveOrder.status !== "ready" && <button className="text-button" name="status" value="cancelled" type="submit" disabled={statusPending}>Cancel request</button>}
+        <button className="text-button" name="status" value="cancelled" type="submit" disabled={statusPending}>Cancel request</button>
       </form>
       {statusState?.message && <p className={statusState.success ? "order-chat__feedback" : "auth-error"} role="status">{statusState.message}</p>}
     </>

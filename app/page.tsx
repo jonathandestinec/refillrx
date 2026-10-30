@@ -4,10 +4,12 @@ import Link from "next/link";
 import { MONTHLY_PLAN_PAYMENT_LABEL } from "@/lib/payments";
 
 import BrandMark, { MedicineMark } from "./components/brand-mark";
+import LandingMotion from "./components/landing-motion";
 import UseCaseDeck from "./components/use-case-deck";
 
 export default function Home() {
   return (
+    <LandingMotion>
     <main className="site-shell">
       <a className="skip-link" href="#main-content">Skip to content</a>
 
@@ -25,10 +27,11 @@ export default function Home() {
           <Link className="nav-cta" href="/sign-up">
             Start a refill plan <span aria-hidden="true">↗</span>
           </Link>
+          <Link className="mobile-sign-in" href="/login">Sign in</Link>
         </nav>
 
         <div className="hero-grid">
-          <div className="hero-copy">
+          <div className="hero-copy" data-reveal>
             <p className="eyebrow eyebrow--light">
               <span className="eyebrow-dot" aria-hidden="true" />
               Community pharmacy · Benin City
@@ -50,13 +53,13 @@ export default function Home() {
               <span className="hero-note__avatar" aria-hidden="true">M</span>
               <span>
                 <strong>Mani, Benin City</strong>
-                <small>Open daily, 7am–6pm · Pickup at the pharmacy</small>
+                <small>Refill review and pickup at Mani</small>
               </span>
             </div>
           </div>
 
           <div className="hero-art" role="img" aria-label="Refill plan illustration">
-            <div className="hero-art__topline">
+            <div className="hero-art__topline" data-reveal>
               <span>Refill plan</span>
               <span className="hero-art__status">Scheduled</span>
             </div>
@@ -70,7 +73,7 @@ export default function Home() {
                 priority
               />
             </div>
-            <div className="hero-art__caption">
+            <div className="hero-art__caption" data-reveal>
               <span>
                 <small>Next step</small>
                 <strong>Request your refill</strong>
@@ -89,14 +92,14 @@ export default function Home() {
       <div id="main-content">
         <section className="deck-section section-pad" id="use-cases">
           <div className="deck-heading">
-            <div>
+            <div data-reveal>
               <div className="section-kicker section-kicker--dark">
                 <span className="section-number">01</span>
                 <span>How a refill moves</span>
               </div>
               <h2>One routine. Five useful <span>moments.</span></h2>
             </div>
-            <p>
+            <p data-reveal>
               Tap once to bring a moment forward. Tap again to see what RefillRx
               does for the patient or the pharmacist.
             </p>
@@ -105,7 +108,7 @@ export default function Home() {
         </section>
 
         <section className="patient-section section-pad" id="patient-view">
-          <div className="patient-section__copy">
+          <div className="patient-section__copy" data-reveal>
             <div className="section-kicker">
               <span className="section-number">02</span>
               <span>For patients</span>
@@ -131,16 +134,16 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="patient-preview" role="img" aria-label="Example RefillRx patient dashboard">
+          <div className="patient-preview" role="img" aria-label="Illustrative RefillRx patient dashboard preview">
             <div className="patient-preview__topbar">
               <span className="patient-preview__mini-brand"><MedicineMark /> refill<span>rx</span></span>
-              <span className="patient-preview__notification">2</span>
+              <span className="patient-preview__sample-label">Example view</span>
             </div>
-            <div className="patient-preview__greeting">
-              <small>Patient dashboard</small>
+            <div className="patient-preview__greeting" data-reveal>
+              <small>Illustrative patient dashboard</small>
               <h3>Your next refill.</h3>
             </div>
-            <div className="patient-preview__next">
+            <div className="patient-preview__next" data-reveal>
               <div>
                 <small>Recurring medicine</small>
                 <strong>Refill plan</strong>
@@ -148,11 +151,11 @@ export default function Home() {
               </div>
               <span className="status-pill status-pill--lime">Planned</span>
             </div>
-            <div className="patient-preview__status">
+            <div className="patient-preview__status" data-reveal>
               <div><span className="status-dot" />Reminder scheduled</div>
               <span>3 days early</span>
             </div>
-            <div className="chat-preview">
+            <div className="chat-preview" data-reveal>
               <span className="chat-preview__avatar">M</span>
               <span><small>Message from Mani</small><strong>Your refill is ready for pickup.</strong></span>
               <span className="chat-preview__arrow" aria-hidden="true">↗</span>
@@ -161,7 +164,7 @@ export default function Home() {
         </section>
 
         <section className="outcome-section outcome-section--reverse section-pad" id="reminder">
-          <div className="outcome-copy">
+          <div className="outcome-copy" data-reveal>
             <div className="section-kicker">
               <span className="section-number">03</span>
               <span>Three-day reminder</span>
@@ -174,13 +177,13 @@ export default function Home() {
             <p className="outcome-note">Reminder window · 3 days before refill</p>
           </div>
           <div className="outcome-art">
-            <Image src="/doodles/02-three-day-reminder.svg" alt="Illustration of a three-day refill reminder" width={600} height={600} />
+            <Image src="/doodles/02-three-day-reminder.svg" alt="Illustration of a three-day refill reminder" width={600} height={600} data-reveal />
           </div>
         </section>
 
         <section className="outcome-section section-pad" id="pickup">
           <div className="outcome-art">
-            <Image src="/doodles/04-ready-for-pickup.svg" alt="Illustration of a refill ready for pickup" width={600} height={600} />
+            <Image src="/doodles/04-ready-for-pickup.svg" alt="Illustration of a refill ready for pickup" width={600} height={600} data-reveal />
           </div>
           <div className="outcome-copy">
             <div className="section-kicker">
@@ -196,11 +199,11 @@ export default function Home() {
             <div className="patient-feature-list">
               <div className="patient-feature">
                 <span className="patient-feature__icon">01</span>
-                <span><strong>Collect at the counter</strong><small>Mani hands over the order in person, open daily 7am–6pm.</small></span>
+                <span><strong>Collect at the counter</strong><small>Pick up your refill in person at Mani, Benin City.</small></span>
               </div>
               <div className="patient-feature">
                 <span className="patient-feature__icon">02</span>
-                <span><strong>No delivery, on purpose</strong><small>Medicines are never mailed out, so the pharmacist can check each handover for safety.</small></span>
+                <span><strong>Pickup status before you go</strong><small>Check RefillRx for the ready-for-pickup update before visiting.</small></span>
               </div>
             </div>
           </div>
@@ -219,16 +222,16 @@ export default function Home() {
             </p>
           </div>
           <div className="outcome-art">
-            <Image src="/doodles/05-refill-history.svg" alt="Illustration of a refill history record" width={600} height={600} />
+            <Image src="/doodles/05-refill-history.svg" alt="Illustration of a refill history record" width={600} height={600} data-reveal />
           </div>
         </section>
 
         <section className="trust-section section-pad" id="for-mani">
           <div className="trust-art">
-            <Image src="/doodles/03-pharmacist-queue.svg" alt="Illustration of a pharmacist reviewing refill requests" width={600} height={600} />
+            <Image src="/doodles/03-pharmacist-queue.svg" alt="Illustration of a pharmacist reviewing refill requests" width={600} height={600} data-reveal />
             <span className="trust-art__label">Pharmacist queue</span>
           </div>
-          <div className="trust-copy">
+          <div className="trust-copy" data-reveal>
             <div className="section-kicker">
               <span className="section-number">06</span>
               <span>For Mani</span>
@@ -243,23 +246,18 @@ export default function Home() {
               <div><strong>Private confirmation</strong><span>Keep availability and pricing out of public view.</span></div>
               <div><strong>Conversation in context</strong><span>Answer the patient beside the active order.</span></div>
             </div>
-            <p className="trust-contact">
-              Questions about a refill? Call or WhatsApp Mani on{" "}
-              <a href="tel:+2349061426386">+234 906 142 6386</a>, or visit the counter — open daily, 7am–6pm.
-            </p>
-            <p className="outcome-note">Mani, Benin City · +234 906 142 6386 · 7am–6pm daily</p>
           </div>
         </section>
 
         <section className="faq-section section-pad" id="faq">
-          <div>
+          <div data-reveal>
             <div className="section-kicker">
               <span className="section-number">07</span>
               <span>Good to know</span>
             </div>
             <h2>Clear answers before you <span>start.</span></h2>
           </div>
-          <div className="faq-list">
+          <div className="faq-list" data-reveal>
             <details open>
               <summary>Are medicine prices shown publicly?</summary>
               <p>No. Mani confirms availability and pricing privately when a refill order is reviewed.</p>
@@ -274,22 +272,22 @@ export default function Home() {
             </details>
             <details>
               <summary>Do refills get delivered?</summary>
-              <p>No. Every refill is collected in person at Mani's counter in Benin City. Handing over medicines in person lets the pharmacist answer questions and confirm the right medicine goes to the right patient.</p>
+              <p>No. Collect refills in person at Mani&apos;s pharmacy counter in Benin City.</p>
             </details>
             <details>
-              <summary>When is the pharmacy open?</summary>
-              <p>Mani opens every day from 7am to 6pm. Call or WhatsApp the counter on +234 906 142 6386 if you are running late for a pickup.</p>
+              <summary>How will I know when to collect?</summary>
+              <p>RefillRx shows the ready-for-pickup status after Mani reviews the order.</p>
             </details>
           </div>
         </section>
 
         <section className="service-section section-pad" id="service">
           <div className="service-card">
-            <div>
+            <div data-reveal>
               <p className="eyebrow">A clear monthly plan</p>
               <h2>Keep the next refill <em>within reach.</em></h2>
             </div>
-            <div className="service-card__right">
+            <div className="service-card__right" data-reveal>
               <p><strong>{MONTHLY_PLAN_PAYMENT_LABEL}.</strong> One payment covers one month of refill planning and status updates. Payment happens before registering a plan.</p>
               <Link className="button button--dark" href="/sign-up">Start a refill plan <span aria-hidden="true">↗</span></Link>
               <small>One-time or in-person payment remains available for a refill request.</small>
@@ -314,5 +312,6 @@ export default function Home() {
         </footer>
       </div>
     </main>
+    </LandingMotion>
   );
 }

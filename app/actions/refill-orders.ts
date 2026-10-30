@@ -116,7 +116,7 @@ const statusPushCopy: Record<RefillOrderStatus, string> = {
   requested: "Your refill request has reached Mani.",
   reviewing: "Mani is reviewing your refill request.",
   ready: "Your refill is ready for pickup at Mani.",
-  completed: "Your refill has been marked completed.",
+  completed: "Your refill has been collected.",
   cancelled: "Your refill request was cancelled.",
 };
 
@@ -124,7 +124,7 @@ const statusNotificationTitles: Record<RefillOrderStatus, string> = {
   requested: "Refill request received",
   reviewing: "Refill under review",
   ready: "Refill ready for pickup",
-  completed: "Refill completed",
+  completed: "Refill collected",
   cancelled: "Refill request cancelled",
 };
 
@@ -231,7 +231,7 @@ export async function updateRefillOrderStatus(
     }
   }
   return {
-    message: nextStatus === "completed" ? "Refill marked completed." : "Order status updated.",
+    message: nextStatus === "completed" ? "Refill marked collected." : "Order status updated.",
     success: true,
     order: {
       status: nextStatus,
@@ -261,23 +261,19 @@ export async function reviewRefillOrder(
 
   if (!orderId) return { message: "That refill order could not be found." };
   if (!["confirmed", "unavailable"].includes(availability)) return { message: "Choose an availability result first." };
-  if (availability === "confirmed" && (!Number.isFinite(price) || price <= 0)) {
+  if (availability === "confirmed" && (!Number.isSafeInteger(price) || price <= 0)) {
     return { message: "Enter the confirmed medicine price." };
   }
 
   const { data: order } = await supabase
     .from("refill_orders")
-    .select("patient_id, plan_id, medicine_id, status")
+    .select("patient_id, plan_id, status")
     .eq("id", orderId)
     .maybeSingle();
 
   if (!order) return { message: "That refill order could not be found." };
-
-  const { data: medicine } = await supabase.from("medicines").select("reference_price_ngn").eq("id", order.medicine_id).maybeSingle();
-  // Confirm the proposed price against the pharmacist-seeded reference price:
-  // saving a review confirms the price the pharmacist actually checked.
-  if (availability === "confirmed" && medicine?.reference_price_ngn != null && Math.abs(price - medicine.reference_price_ngn) > 0.009) {
-    return { message: "The entered price does not match the reference price for this medicine." };
+  if (!["requested", "reviewing"].includes(order.status)) {
+    return { message: "Only requests under review can be updated." };
   }
 
   const updates: Record<string, unknown> = {
@@ -291,9 +287,6 @@ export async function reviewRefillOrder(
   // "Unavailable" takes the request out of the queue. Otherwise a confirmed
   // review starts the review state so the queue never shows reviewed work as new.
   if (availability === "unavailable") {
-    if (!["requested", "reviewing"].includes(order.status)) {
-      return { message: "Only open requests can be marked unavailable." };
-    }
     updates.status = "cancelled";
     updates.completed_at = new Date().toISOString();
   } else if (order.status === "requested") {
@@ -408,10 +401,13 @@ export async function markOrderMessagesRead(formData: FormData): Promise<void> {
   const orderId = text(formData, "order_id");
   if (!orderId) return;
 
-  await supabase
+  const { error } = await supabase
     .from("refill_order_messages")
     .update({ read_at: new Date().toISOString() })
     .eq("order_id", orderId)
     .neq("sender_id", viewerId)
     .is("read_at", null);
+  if (error) {
+    console.error("Mark order messages read failed", { code: error.code, message: error.message });
+  }
 }

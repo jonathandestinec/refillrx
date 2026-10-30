@@ -28,6 +28,11 @@ export default function PushNotificationOptIn({ variant = "patient" }: { variant
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
+        setErrorMessage(
+          permission === "denied"
+            ? "Notifications are blocked for this site. Allow them in your browser settings, then try again."
+            : "Notification permission was not granted. You can enable reminders any time.",
+        );
         setState("error");
         return;
       }
@@ -44,7 +49,12 @@ export default function PushNotificationOptIn({ variant = "patient" }: { variant
       }
       setState("enabled");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Notifications were not enabled.");
+      const message = error instanceof Error ? error.message : "";
+      setErrorMessage(
+        /permission denied|not allowed/i.test(message)
+          ? "Push reminders are unavailable in this browser session. Try a regular browser window or check this site's notification settings."
+          : message || "We couldn't enable reminders. Check your connection and try again.",
+      );
       setState("error");
     }
   }

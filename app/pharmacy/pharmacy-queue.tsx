@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import { formatDate } from "@/lib/date-format";
@@ -36,10 +36,12 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
   // A server action re-renders this page with fresh data; client-only rows
   // (received live but not yet in a server payload) are kept alongside it.
   useEffect(() => {
-    setOrders((current) => {
-      const serverIds = new Set(initialOrders.map((order) => order.id));
-      const clientOnly = current.filter((order) => !serverIds.has(order.id));
-      return clientOnly.length ? [...initialOrders, ...clientOnly] : initialOrders;
+    startTransition(() => {
+      setOrders((current) => {
+        const serverIds = new Set(initialOrders.map((order) => order.id));
+        const clientOnly = current.filter((order) => !serverIds.has(order.id));
+        return clientOnly.length ? [...initialOrders, ...clientOnly] : initialOrders;
+      });
     });
   }, [initialOrders]);
 
@@ -159,7 +161,7 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
                   <strong>{order.medicine?.name ?? "Medicine unavailable"}{order.medicine?.strength ? ` ${order.medicine.strength}` : ""}</strong>
                   <span>{order.patient?.full_name ?? "Patient record unavailable"} · Requested {formatDate(order.requested_at)}</span>
                 </div>
-                <span className={`status-pill ${order.status === "completed" ? "status-pill--lime" : "status-pill--grey"}`}>{order.status === "completed" ? "Completed" : "Cancelled"}</span>
+                <span className={`status-pill ${order.status === "completed" ? "status-pill--lime" : "status-pill--grey"}`}>{order.status === "completed" ? "Collected" : "Cancelled"}</span>
               </div>
             ))}
           </div> : <p className="pharmacy-history__empty">Completed or cancelled requests will appear here.</p>}

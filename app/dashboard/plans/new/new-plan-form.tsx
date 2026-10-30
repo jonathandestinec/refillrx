@@ -18,11 +18,18 @@ export type MedicineOption = {
 
 const initialState: PlanDraftState = null;
 
+function getDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 10);
+}
+
 function getDefaultDate() {
   const date = new Date();
   date.setDate(date.getDate() + 30);
-  return date.toISOString().slice(0, 10);
+  return getDateInputValue(date);
 }
+
+const today = getDateInputValue(new Date());
 
 export default function NewPlanForm({ medicines, onSuccess }: { medicines: MedicineOption[]; onSuccess?: () => void }) {
   const [state, action, pending] = useActionState(saveRefillPlanDraft, initialState);
@@ -71,14 +78,14 @@ export default function NewPlanForm({ medicines, onSuccess }: { medicines: Medic
             <span>Refill frequency</span>
             <select id="frequency_days" name="frequency_days" defaultValue="30" required>
               <option value="28">Every 28 days</option>
-              <option value="30">Every month</option>
-              <option value="60">Every 2 months</option>
-              <option value="90">Every 3 months</option>
+              <option value="30">Every 30 days</option>
+              <option value="60">Every 60 days</option>
+              <option value="90">Every 90 days</option>
             </select>
           </label>
           <label className="auth-field" htmlFor="next_refill_date">
             <span>Next refill date</span>
-            <input id="next_refill_date" name="next_refill_date" type="date" min={new Date().toISOString().slice(0, 10)} defaultValue={getDefaultDate()} required />
+            <input id="next_refill_date" name="next_refill_date" type="date" min={today} defaultValue={getDefaultDate()} required />
           </label>
         </div>
       </div>

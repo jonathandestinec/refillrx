@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import BrandMark from "./brand-mark";
 import { createClient } from "@/lib/supabase/client";
@@ -41,18 +41,7 @@ export default function AccountNavigation({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [liveNotifications, setLiveNotifications] = useState(unreadNotifications);
-  const [liveMessages, setLiveMessages] = useState(unreadMessages);
   const items: NavigationItem[] = navigation[role];
-
-  // A server re-render (any revalidatePath from actions) restores the exact
-  // server-computed counts; realtime refines them between renders.
-  useEffect(() => {
-    setLiveNotifications(unreadNotifications);
-  }, [unreadNotifications]);
-  useEffect(() => {
-    setLiveMessages(unreadMessages);
-  }, [unreadMessages]);
 
   useEffect(() => {
     if (!userId) return;
@@ -67,7 +56,7 @@ export default function AccountNavigation({
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `patient_id=eq.${userId}` },
-        () => setLiveNotifications((current) => current + 1),
+        refreshCounts,
       )
       .on(
         "postgres_changes",
@@ -77,10 +66,7 @@ export default function AccountNavigation({
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "refill_order_messages" },
-        (payload) => {
-          const message = payload.new as { sender_id?: string; read_at?: string | null };
-          if (message.sender_id && message.sender_id !== userId) setLiveMessages((current) => current + 1);
-        },
+        refreshCounts,
       )
       .on(
         "postgres_changes",
@@ -105,7 +91,7 @@ export default function AccountNavigation({
         {items.map((item) => {
           const itemPath = item.href.split("#")[0];
           const active = !item.href.includes("#") && pathname === itemPath;
-          const liveCount = item.badge === "notifications" ? liveNotifications : liveMessages;
+          const liveCount = item.badge === "notifications" ? unreadNotifications : unreadMessages;
           const showBadge = item.badge && liveCount > 0;
           return (
             <Link className={`account-sidebar__link${active ? " account-sidebar__link--active" : ""}`} href={item.href} key={item.href} aria-current={active ? "page" : undefined}>

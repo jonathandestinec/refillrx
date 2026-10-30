@@ -12,7 +12,8 @@ export default async function PharmacyMessagesPage() {
   await connection();
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-  const pharmacistId = claimsData?.claims?.sub;  if (!pharmacistId) redirect("/login");
+  const pharmacistId = claimsData?.claims?.sub;
+  if (!pharmacistId) redirect("/login");
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", pharmacistId).maybeSingle();
   if (profile?.role !== "pharmacist") redirect("/dashboard/messages");
@@ -42,7 +43,7 @@ export default async function PharmacyMessagesPage() {
   const unreadByOrder = new Map<string, number>();
   let unreadMessages = 0;
   for (const [orderId, list] of messagesByOrder) {
-    const unread = list.filter((message) => message.sender_id !== pharmacistId).length;
+    const unread = list.filter((message) => message.sender_id !== pharmacistId && !message.read_at).length;
     unreadByOrder.set(orderId, unread);
     unreadMessages += unread;
   }

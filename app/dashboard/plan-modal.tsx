@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import NewPlanForm, { type MedicineOption } from "@/app/dashboard/plans/new/new-plan-form";
@@ -33,6 +33,10 @@ export default function NewPlanModal({
   }, [open]);
 
   const close = () => setOpen(false);
+  const handleSuccess = useCallback(() => {
+    setOpen(false);
+    router.refresh();
+  }, [router]);
 
   return (
     <>
@@ -67,7 +71,7 @@ export default function NewPlanModal({
             <span>Refresh the page and try again.</span>
           </div>
         ) : (
-          <NewPlanForm medicines={medicines} onSuccess={() => { close(); router.refresh(); }} />
+          <NewPlanForm medicines={medicines} onSuccess={handleSuccess} />
         )}
       </dialog>
     </>
