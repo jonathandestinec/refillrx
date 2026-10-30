@@ -1,3 +1,4 @@
+-- Currency defaults are aligned with Mani, Benin City pricing (NGN).
 -- Superseded: refill_orders is created with its final shape, RLS, and indexes
 -- by 20261028163028_create_refillrx_core_schema.sql, which reproduces the
 -- originally deployed migrations (create_refillrx_core_schema + order fixes).

@@ -29,22 +29,22 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
   // order state immediately; realtime covers the patient-side view.
   useEffect(() => {
     if (reviewState?.success && reviewState.order) {
-      setLiveOrder((current) => ({
+      queueMicrotask(() => setLiveOrder((current) => ({
         status: reviewState.order!.status,
         availabilityConfirmed: reviewState.order!.availability_confirmed,
         privatePriceAmount: reviewState.order!.private_price_amount,
         reviewedAt: current.reviewedAt ?? new Date().toISOString(),
-      }));
+      })));
     }
   }, [reviewState]);
   useEffect(() => {
     if (statusState?.success && statusState.order) {
-      setLiveOrder((current) => ({
+      queueMicrotask(() => setLiveOrder((current) => ({
         status: statusState.order!.status,
         availabilityConfirmed: current.availabilityConfirmed,
         privatePriceAmount: current.privatePriceAmount,
         reviewedAt: current.reviewedAt,
-      }));
+      })));
     }
   }, [statusState]);
 

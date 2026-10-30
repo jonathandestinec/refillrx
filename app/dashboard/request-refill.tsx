@@ -19,8 +19,10 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
   // submit; realtime keeps the view in sync with pharmacist-side updates.
   useEffect(() => {
     if (state?.success) {
-      if (state.order) setLiveOrder({ status: state.order.status, price: state.order.private_price_amount, currency: state.order.private_price_currency });
-      else router.refresh();
+      queueMicrotask(() => {
+        if (state.order) setLiveOrder({ status: state.order.status, price: state.order.private_price_amount, currency: state.order.private_price_currency });
+        else router.refresh();
+      });
     }
   }, [state, router]);
 

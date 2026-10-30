@@ -262,6 +262,9 @@ export async function reviewRefillOrder(
     .maybeSingle();
 
   if (!order) return { message: "That refill order could not be found." };
+  if (!["requested", "reviewing"].includes(order.status)) {
+    return { message: "Only open refill requests can be reviewed." };
+  }
 
   const { data: medicine } = await supabase.from("medicines").select("reference_price_ngn").eq("id", order.medicine_id).maybeSingle();
   // Confirm the proposed price against the pharmacist-seeded reference price:

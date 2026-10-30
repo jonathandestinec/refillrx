@@ -250,7 +250,7 @@ create table if not exists public.refill_orders (
   pharmacist_note text,
   availability_confirmed boolean not null default false,
   private_price_amount numeric,
-  private_price_currency text not null default 'USD',
+  private_price_currency text not null default 'NGN',
   requested_for date not null default current_date,
   requested_at timestamptz not null default now(),
   reviewed_at timestamptz,

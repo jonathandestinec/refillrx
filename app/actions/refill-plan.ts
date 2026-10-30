@@ -34,7 +34,24 @@ export async function saveRefillPlanDraft(
   }
 
   if (!nextRefillDate) return { message: "Choose the next refill date." };
+  const parsedDate = new Date(`${nextRefillDate}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (Number.isNaN(parsedDate.getTime()) || parsedDate < today) {
+    return { message: "Choose today or a future refill date." };
+  }
+  if (![28, 30, 60, 90].includes(frequencyDays)) {
+    return { message: "Choose one of the supported refill frequencies." };
+  }
   if (instructions.length > 500) return { message: "Keep instructions under 500 characters." };
+
+  const { data: medicine } = await supabase
+    .from("medicines")
+    .select("id")
+    .eq("id", medicineId)
+    .eq("active", true)
+    .maybeSingle();
+  if (!medicine) return { message: "Choose an active medicine from the list." };
 
   const { error } = await supabase.from("refill_plan_drafts").insert({
     patient_id: patientId,

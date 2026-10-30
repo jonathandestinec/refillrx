@@ -274,7 +274,7 @@ export default function Home() {
             </details>
             <details>
               <summary>Do refills get delivered?</summary>
-              <p>No. Every refill is collected in person at Mani's counter in Benin City. Handing over medicines in person lets the pharmacist answer questions and confirm the right medicine goes to the right patient.</p>
+              <p>No. Every refill is collected in person at Mani&apos;s counter in Benin City. Handing over medicines in person lets the pharmacist answer questions and confirm the right medicine goes to the right patient.</p>
             </details>
             <details>
               <summary>When is the pharmacy open?</summary>
