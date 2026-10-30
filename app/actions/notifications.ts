@@ -26,4 +26,6 @@ export async function markNotificationsRead(): Promise<void> {
   }
   revalidatePath("/dashboard/notifications");
   revalidatePath("/dashboard");
+  revalidatePath("/pharmacy/notifications");
+  revalidatePath("/pharmacy");
 }

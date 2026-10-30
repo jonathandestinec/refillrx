@@ -11,7 +11,7 @@ const initialState: RefillOrderState = null;
 
 export default function RequestRefill({ planId, status, price, currency }: { planId: string; status?: string | null; price?: number | null; currency?: string | null }) {
   const [state, action, pending] = useActionState(requestRefill, initialState);
-  const [liveOrder, setLiveOrder] = useState({ status, price, currency });
+  const [liveOrder, setLiveOrder] = useState({ status, price, currency, updatedAt: null as string | null });
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
   const router = useRouter();
 
@@ -19,7 +19,7 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
   // submit; realtime keeps the view in sync with pharmacist-side updates.
   useEffect(() => {
     if (state?.success) {
-      if (state.order) setLiveOrder({ status: state.order.status, price: state.order.private_price_amount, currency: state.order.private_price_currency });
+      if (state.order) setLiveOrder({ status: state.order.status, price: state.order.private_price_amount, currency: state.order.private_price_currency, updatedAt: ("updated_at" in state.order ? (state.order as { updated_at?: string }).updated_at : undefined) ?? new Date().toISOString() });
       else router.refresh();
     }
   }, [state, router]);
@@ -33,11 +33,21 @@ export default function RequestRefill({ planId, status, price, currency }: { pla
         { event: "*", schema: "public", table: "refill_orders", filter: `plan_id=eq.${planId}` },
         (payload) => {
           if (payload.eventType === "DELETE") {
-            setLiveOrder({ status: null, price: null, currency: null });
+            setLiveOrder({ status: null, price: null, currency: null, updatedAt: null });
             return;
           }
-          const order = payload.new as { status?: string; private_price_amount?: number | null; private_price_currency?: string | null };
-          setLiveOrder({ status: order.status ?? null, price: order.private_price_amount ?? null, currency: order.private_price_currency ?? null });
+          const order = payload.new as { status?: string; private_price_amount?: number | null; private_price_currency?: string | null; updated_at?: string | null };
+          setLiveOrder((current) => {
+            // Ignore out-of-order realtime events; the server result and the
+            // database are the source of truth, realtime only mirrors them.
+            if (current.updatedAt && order.updated_at && order.updated_at <= current.updatedAt) return current;
+            return {
+              status: order.status ?? current.status,
+              price: order.private_price_amount ?? null,
+              currency: order.private_price_currency ?? null,
+              updatedAt: order.updated_at ?? current.updatedAt,
+            };
+          });
         },
       )
       .subscribe((subscriptionStatus) => {

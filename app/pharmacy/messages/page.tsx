@@ -51,7 +51,7 @@ export default async function PharmacyMessagesPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="pharmacist" unreadMessages={unreadMessages} />
+        <AccountNavigation role="pharmacist" userId={pharmacistId} unreadMessages={unreadMessages} />
         <section className="account-content messages-page" id="account-main" tabIndex={-1}>
           <div className="account-intro">
             <p className="eyebrow">Pharmacy messages</p>

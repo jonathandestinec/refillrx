@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getPharmacistId, logNotification, notifyUser } from "@/lib/push-server";
 import { addDaysToDate, scheduleRefillReminder } from "@/lib/refill-reminders";
 
-export type RefillOrderState = { message?: string; success?: boolean; order?: { status: string; private_price_amount: number | null; private_price_currency: string } | null } | null;
+export type RefillOrderState = { message?: string; success?: boolean; order?: { status: string; private_price_amount: number | null; private_price_currency: string; updated_at?: string } | null } | null;
 export type MessageState = { message?: string; success?: boolean; sentMessage?: { id: string; sender_id: string; body: string; created_at: string } } | null;
 
 function text(formData: FormData, key: string) {
@@ -95,12 +95,12 @@ export async function requestRefill(
 
   // Return the created order so the client can show "Request sent" without
   // waiting for a realtime event.
-  return { message: "Refill request sent to Mani.", success: true, order: { status: "requested", private_price_amount: null, private_price_currency: "NGN" } };
+  return { message: "Refill request sent to Mani.", success: true, order: { status: "requested", private_price_amount: null, private_price_currency: "NGN", updated_at: new Date().toISOString() } };
 }
 
 const allowedStatuses = ["requested", "reviewing", "ready", "completed", "cancelled"] as const;
 type RefillOrderStatus = (typeof allowedStatuses)[number];
-export type OrderStatusState = { message?: string; success?: boolean; order?: { status: string; availability_confirmed: boolean; private_price_amount: number | null } | null } | null;
+export type OrderStatusState = { message?: string; success?: boolean; order?: { status: string; availability_confirmed: boolean; private_price_amount: number | null; updated_at?: string } | null } | null;
 // A refill order may only move forward through this chain (or be cancelled
 // while it is still open). This keeps patients from tricks like re-opening a
 // completed order and forces availability confirmation before pickup.
@@ -118,6 +118,14 @@ const statusPushCopy: Record<RefillOrderStatus, string> = {
   ready: "Your refill is ready for pickup at Mani.",
   completed: "Your refill has been marked completed.",
   cancelled: "Your refill request was cancelled.",
+};
+
+const statusNotificationTitles: Record<RefillOrderStatus, string> = {
+  requested: "Refill request received",
+  reviewing: "Refill under review",
+  ready: "Refill ready for pickup",
+  completed: "Refill completed",
+  cancelled: "Refill request cancelled",
 };
 
 async function loadActorProfile(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
@@ -174,12 +182,13 @@ export async function updateRefillOrderStatus(
 
   if (existingOrder.patient_id) {
     const body = statusPushCopy[nextStatus] ?? "There is an update about your refill.";
-    await notifyUser(existingOrder.patient_id, { title: "RefillRx update", body, url: "/dashboard" });
+    const title = statusNotificationTitles[nextStatus];
+    await notifyUser(existingOrder.patient_id, { title, body, url: "/dashboard" });
     const admin = createAdminClient();
     await logNotification(admin, {
       userId: existingOrder.patient_id,
       type: "order_update",
-      title: "RefillRx update",
+      title,
       body,
       url: "/dashboard",
     });
@@ -228,6 +237,7 @@ export async function updateRefillOrderStatus(
       status: nextStatus,
       availability_confirmed: existingOrder.availability_confirmed,
       private_price_amount: existingOrder.private_price_amount,
+      updated_at: new Date().toISOString(),
     },
   };
 }
@@ -303,12 +313,13 @@ export async function reviewRefillOrder(
     const body = availability === "confirmed"
       ? "Mani confirmed availability and set a private price on your refill."
       : "Mani could not source this medicine. Your request was cancelled; message Mani for alternatives.";
-    await notifyUser(order.patient_id, { title: "RefillRx review update", body, url: "/dashboard" });
+    const reviewTitle = availability === "confirmed" ? "Availability confirmed" : "Medicine unavailable";
+    await notifyUser(order.patient_id, { title: reviewTitle, body, url: "/dashboard" });
     const admin = createAdminClient();
     await logNotification(admin, {
       userId: order.patient_id,
       type: "order_update",
-      title: "RefillRx review update",
+      title: reviewTitle,
       body,
       url: "/dashboard",
     });
@@ -324,6 +335,7 @@ export async function reviewRefillOrder(
       status: reviewedStatus,
       availability_confirmed: availability === "confirmed",
       private_price_amount: availability === "confirmed" ? price : null,
+      updated_at: new Date().toISOString(),
     },
   };
 }

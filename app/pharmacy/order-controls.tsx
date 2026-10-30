@@ -18,7 +18,7 @@ type OrderControlsProps = {
 export default function OrderControls({ orderId, status, availabilityConfirmed, privatePriceAmount, reviewedAt, referencePrice }: OrderControlsProps) {
   const [statusState, statusAction, statusPending] = useActionState(updateRefillOrderStatus, null as OrderStatusState);
   const [reviewState, reviewAction, reviewPending] = useActionState(reviewRefillOrder, null as OrderStatusState);
-  const [liveOrder, setLiveOrder] = useState({ status, availabilityConfirmed, privatePriceAmount, reviewedAt });
+  const [liveOrder, setLiveOrder] = useState({ status, availabilityConfirmed, privatePriceAmount, reviewedAt, updatedAt: null as string | null });
   const [availability, setAvailability] = useState(() => {
     if (reviewedAt) return availabilityConfirmed ? "confirmed" : "unavailable";
     return "";
@@ -34,6 +34,7 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         availabilityConfirmed: reviewState.order!.availability_confirmed,
         privatePriceAmount: reviewState.order!.private_price_amount,
         reviewedAt: current.reviewedAt ?? new Date().toISOString(),
+        updatedAt: reviewState.order!.updated_at ?? current.updatedAt,
       }));
     }
   }, [reviewState]);
@@ -44,6 +45,7 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         availabilityConfirmed: current.availabilityConfirmed,
         privatePriceAmount: current.privatePriceAmount,
         reviewedAt: current.reviewedAt,
+        updatedAt: statusState.order!.updated_at ?? current.updatedAt,
       }));
     }
   }, [statusState]);
@@ -57,12 +59,18 @@ export default function OrderControls({ orderId, status, availabilityConfirmed, 
         { event: "*", schema: "public", table: "refill_orders", filter: `id=eq.${orderId}` },
         (payload) => {
           if (payload.eventType === "DELETE") return;
-          const order = payload.new as { status?: string; availability_confirmed?: boolean; private_price_amount?: number | null; reviewed_at?: string | null };
-          setLiveOrder({
-            status: order.status ?? status,
-            availabilityConfirmed: Boolean(order.availability_confirmed),
-            privatePriceAmount: order.private_price_amount ?? null,
-            reviewedAt: order.reviewed_at ?? null,
+          const order = payload.new as { status?: string; availability_confirmed?: boolean; private_price_amount?: number | null; reviewed_at?: string | null; updated_at?: string | null };
+          setLiveOrder((current) => {
+            // Realtime can replay events out of order; a stale event must not
+            // revert an order the pharmacist has already moved on from.
+            if (current.updatedAt && order.updated_at && order.updated_at <= current.updatedAt) return current;
+            return {
+              status: order.status ?? current.status,
+              availabilityConfirmed: order.availability_confirmed ?? current.availabilityConfirmed,
+              privatePriceAmount: order.private_price_amount ?? null,
+              reviewedAt: order.reviewed_at ?? current.reviewedAt,
+              updatedAt: order.updated_at ?? current.updatedAt,
+            };
           });
         },
       )

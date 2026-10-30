@@ -2,6 +2,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-NG", {
   day: "numeric",
   month: "short",
   year: "numeric",
+  timeZone: "Africa/Lagos",
 });
 
 const dateTimeFormatter = new Intl.DateTimeFormat("en-NG", {
@@ -9,6 +10,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-NG", {
   month: "short",
   hour: "numeric",
   minute: "2-digit",
+  timeZone: "Africa/Lagos",
 });
 
 function parseDate(value: string | null | undefined) {

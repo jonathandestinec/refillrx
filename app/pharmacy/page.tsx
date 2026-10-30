@@ -27,15 +27,15 @@ export default async function PharmacyPage() {
 
   const { data: orders, error: ordersError } = await supabase
     .from("refill_orders")
-    .select("id, patient_id, medicine_id, status, patient_note, requested_for, requested_at, availability_confirmed, private_price_amount, private_price_currency, reviewed_at")
+    .select("id, patient_id, medicine_id, status, patient_note, requested_for, requested_at, availability_confirmed, private_price_amount, private_price_currency, reviewed_at, updated_at")
     .in("status", ["requested", "reviewing", "ready"])
     .order("requested_at", { ascending: true });
 
   const { data: historyOrders } = await supabase
     .from("refill_orders")
-    .select("id, patient_id, medicine_id, status, patient_note, requested_for, requested_at, availability_confirmed, private_price_amount, private_price_currency, reviewed_at")
+    .select("id, patient_id, medicine_id, status, patient_note, requested_for, requested_at, availability_confirmed, private_price_amount, private_price_currency, reviewed_at, updated_at")
     .in("status", ["completed", "cancelled"])
-    .order("completed_at", { ascending: false })
+    .order("completed_at", { ascending: false, nullsFirst: false })
     .limit(8);
 
   if (ordersError) {
@@ -78,7 +78,7 @@ export default async function PharmacyPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="pharmacist" unreadMessages={unreadMessages} />
+        <AccountNavigation role="pharmacist" userId={claims.sub} unreadMessages={unreadMessages} />
         <section className="account-content account-content--pharmacy" id="account-main" tabIndex={-1}>
         <div className="account-intro">
           <p className="eyebrow">Mani, Benin City</p>

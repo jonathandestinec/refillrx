@@ -50,7 +50,7 @@ export default function PushNotificationOptIn({ variant = "patient" }: { variant
   }
 
   return (
-    <aside className="notification-opt-in" aria-live="polite">
+    <aside className="notification-opt-in">
       <div>
         {variant === "pharmacist" ? (
           <>
@@ -64,8 +64,8 @@ export default function PushNotificationOptIn({ variant = "patient" }: { variant
           </>
         )}
       </div>
-      {state === "enabled" ? <span className="notification-opt-in__success">Reminders enabled</span> : <button className="button button--light" type="button" onClick={() => void enableNotifications()} disabled={state === "enabling"}>{state === "enabling" ? "Enabling…" : "Enable reminders"}</button>}
-      {state === "error" && <small className="notification-opt-in__error">{errorMessage || "Notifications were not enabled. Check your browser permission and try again."}</small>}
+      {state === "enabled" ? <span className="notification-opt-in__success" role="status">{variant === "pharmacist" ? "Alerts enabled" : "Reminders enabled"}</span> : <button className="button button--light" type="button" onClick={() => void enableNotifications()} disabled={state === "enabling"}>{state === "enabling" ? "Enabling…" : variant === "pharmacist"? "Enable alerts" : "Enable reminders"}</button>}
+      {state === "error" && <small className="notification-opt-in__error" role="alert">{errorMessage || "Notifications were not enabled. Check your browser permission and try again."}</small>}
     </aside>
   );
 }

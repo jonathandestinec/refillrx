@@ -21,6 +21,7 @@ type PharmacyOrder = {
   private_price_amount: number | null;
   private_price_currency: string | null;
   reviewed_at: string | null;
+  updated_at: string | null;
   patient?: Patient;
   medicine?: Medicine;
 };
@@ -32,12 +33,22 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
   const [history, setHistory] = useState(initialHistory);
   const [liveState, setLiveState] = useState<"connecting" | "connected" | "error">("connecting");
 
+  // A server action re-renders this page with fresh data; client-only rows
+  // (received live but not yet in a server payload) are kept alongside it.
+  useEffect(() => {
+    setOrders((current) => {
+      const serverIds = new Set(initialOrders.map((order) => order.id));
+      const clientOnly = current.filter((order) => !serverIds.has(order.id));
+      return clientOnly.length ? [...initialOrders, ...clientOnly] : initialOrders;
+    });
+  }, [initialOrders]);
+
   useEffect(() => {
     const supabase = createClient();
     const loadOrder = async (orderId: string): Promise<PharmacyOrder | null> => {
       const { data: order } = await supabase
         .from("refill_orders")
-        .select("id, patient_id, medicine_id, status, patient_note, requested_for, requested_at, availability_confirmed, private_price_amount, private_price_currency, reviewed_at")
+        .select("id, patient_id, medicine_id, status, patient_note, requested_for, requested_at, availability_confirmed, private_price_amount, private_price_currency, reviewed_at, updated_at")
         .eq("id", orderId)
         .maybeSingle();
       if (!order || !openStatuses.includes(order.status)) return null;
@@ -61,15 +72,19 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "refill_orders" }, (payload) => {
         const orderId = String(payload.new.id);
-        if (!openStatuses.includes(String(payload.new.status))) {
-          setOrders((current) => {
-            const completedOrder = current.find((item) => item.id === orderId);
-            if (completedOrder) setHistory((currentHistory) => [{ ...completedOrder, ...payload.new } as PharmacyOrder, ...currentHistory.filter((item) => item.id !== orderId)].slice(0, 8));
+        const incoming = payload.new as PharmacyOrder;
+        setOrders((current) => {
+          const existing = current.find((item) => item.id === orderId);
+          // Ignore out-of-order realtime events so a stale update cannot
+          // resurrect or revert an order the server already moved on from.
+          if (existing?.updated_at && incoming.updated_at && incoming.updated_at <= existing.updated_at) return current;
+          if (!openStatuses.includes(String(payload.new.status))) {
+            const completedOrder = existing;
+            if (completedOrder) setHistory((currentHistory) => [{ ...completedOrder, ...incoming } as PharmacyOrder, ...currentHistory.filter((item) => item.id !== orderId)].slice(0, 8));
             return current.filter((item) => item.id !== orderId);
-          });
-          return;
-        }
-        setOrders((current) => current.map((item) => item.id === orderId ? { ...item, ...payload.new } as PharmacyOrder : item));
+          }
+          return current.map((item) => item.id === orderId ? { ...item, ...incoming } as PharmacyOrder : item);
+        });
       })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "refill_orders" }, (payload) => {
         setOrders((current) => current.filter((item) => item.id !== String(payload.old.id)));
@@ -132,10 +147,10 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
       <section className="pharmacy-history" id="history" aria-labelledby="pharmacy-history-title">
           <div className="pharmacy-history__heading">
             <div>
-              <p className="eyebrow">Recent outcomes</p>
-              <h2 id="pharmacy-history-title">Completed requests</h2>
+              <p className="eyebrow">Request history</p>
+              <h2 id="pharmacy-history-title">Recent outcomes</h2>
             </div>
-            <span>Last {history.length}</span>
+            <span>Last {history.length} {history.length === 1 ? "order" : "orders"}</span>
           </div>
           {history.length ? <div className="pharmacy-history__list">
             {history.map((order) => (
@@ -144,7 +159,7 @@ export default function PharmacyQueue({ initialOrders, initialHistory }: { initi
                   <strong>{order.medicine?.name ?? "Medicine unavailable"}{order.medicine?.strength ? ` ${order.medicine.strength}` : ""}</strong>
                   <span>{order.patient?.full_name ?? "Patient record unavailable"} · Requested {formatDate(order.requested_at)}</span>
                 </div>
-                <span className={`status-pill ${order.status === "completed" ? "status-pill--lime" : "status-pill--yellow"}`}>{order.status === "completed" ? "Completed" : "Cancelled"}</span>
+                <span className={`status-pill ${order.status === "completed" ? "status-pill--lime" : "status-pill--grey"}`}>{order.status === "completed" ? "Completed" : "Cancelled"}</span>
               </div>
             ))}
           </div> : <p className="pharmacy-history__empty">Completed or cancelled requests will appear here.</p>}

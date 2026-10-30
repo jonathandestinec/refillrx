@@ -39,7 +39,7 @@ export default async function PatientMessagesPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" unreadMessages={unreadMessages} />
+        <AccountNavigation role="patient" userId={patientId} unreadMessages={unreadMessages} />
         <section className="account-content messages-page" id="account-main" tabIndex={-1}>
           <div className="account-intro">
             <p className="eyebrow">Patient messages</p>

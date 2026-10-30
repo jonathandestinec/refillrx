@@ -2,8 +2,9 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 
 import AccountNavigation from "@/app/components/account-navigation";
+import LiveRefresh from "@/app/components/live-refresh";
 import { markNotificationsRead } from "@/app/actions/notifications";
-import { formatDateTime } from "@/lib/date-format";
+import { formatDate, formatDateTime } from "@/lib/date-format";
 import { createClient } from "@/lib/supabase/server";
 
 export const instant = false;
@@ -49,7 +50,8 @@ export default async function NotificationsPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" unreadMessages={0} />
+        <AccountNavigation role="patient" userId={patientId} unreadMessages={0} unreadNotifications={unreadCount} />
+        <LiveRefresh userId={patientId} channelName="refillrx-patient-notifications" />
         <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
           <div className="account-intro">
             <p className="eyebrow">Notifications</p>
@@ -83,7 +85,7 @@ export default async function NotificationsPage() {
                         </div>
                         <strong>{row.title}</strong>
                         <p>{row.body}</p>
-                        {when && <time dateTime={when}>{row.status === "sent" ? "Delivered" : "Scheduled"} {formatDateTime(when)}</time>}
+                        {when && <time dateTime={when}>{row.status === "sent" ? `Delivered ${formatDateTime(when)}` : `Planned for ${formatDate(when)}`}</time>}
                       </div>
                     </li>
                   );

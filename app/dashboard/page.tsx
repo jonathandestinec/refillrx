@@ -127,7 +127,7 @@ export default async function DashboardPage() {
     <main className="account-shell">
       <a className="skip-link" href="#account-main">Skip to main content</a>
       <div className="account-app">
-        <AccountNavigation role="patient" unreadMessages={unreadMessages} />
+        <AccountNavigation role="patient" userId={claims.sub} unreadMessages={unreadMessages} />
         <section className="account-content account-content--patient" id="account-main" tabIndex={-1}>
         <div className="account-intro">
           <p className="eyebrow">Refill plan</p>
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
                       <strong>{medicine?.name ?? "Medicine unavailable"}{medicine?.strength ? ` ${medicine.strength}` : ""}</strong>
                       <span>Requested {formatDate(order.requested_at)}</span>
                     </div>
-                    <span className={`status-pill ${completed ? "status-pill--lime" : "status-pill--yellow"}`}>{completed ? "Completed" : "Cancelled"}</span>
+                    <span className={`status-pill ${completed ? "status-pill--lime" : "status-pill--grey"}`}>{completed ? "Completed" : "Cancelled"}</span>
                   </div>
                 );
               })}
